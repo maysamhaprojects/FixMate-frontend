@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/Maysa/OneDrive/Desktop/**)",
+      "Bash(cd \"/c/Users/Maysa/OneDrive/Desktop/fixmate-backend\")",
+      "Bash(grep -rl \"pending-pros\\\\|pending\" --include=\"*.java\" src)",
+      "Bash(find src *)"
+    ]
+  }
+}

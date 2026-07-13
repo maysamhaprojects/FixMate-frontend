@@ -138,7 +138,7 @@ export default function AdminDashboard() {
   const [users,    setUsers   ] = useState([]);
   const [orders,   setOrders  ] = useState([]);
   const [stats,    setStats   ] = useState({ totalUsers: 0, totalPros: 0, totalOrders: 0, revenue: 0, openComplaints: 0, pendingApprovals: 0 });
-  const [me,       setMe      ] = useState({ name: localStorage.getItem("fullName") || "Admin", email: "" });
+  const [me,       setMe      ] = useState({ name: localStorage.getItem("fullName") || "Admin", email: "", profilePicture: localStorage.getItem("profilePicture") || "" });
   const [rejectReason, setRejectReason] = useState("");
   const [compResponse, setCompResponse] = useState("");
   const [modal,    setModal   ] = useState(null);
@@ -222,7 +222,7 @@ export default function AdminDashboard() {
 
     fetch("http://localhost:8080/api/user/me", auth)
       .then((r) => (r.ok ? r.json() : null))
-      .then((u) => { if (u) setMe({ name: u.fullName || "Admin", email: u.email || "" }); })
+      .then((u) => { if (u) { setMe({ name: u.fullName || "Admin", email: u.email || "", profilePicture: u.profilePicture || "" }); localStorage.setItem("profilePicture", u.profilePicture || ""); } })
       .catch(() => {});
 
     fetch("http://localhost:8080/api/admin/stats", auth)
@@ -378,6 +378,40 @@ export default function AdminDashboard() {
       .finally(() => setModal(null));
   };
 
+  /* העלאת תמונת פרופיל לאדמין — מכווץ ל-256px ושומר מיד */
+  const uploadAdminPhoto = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 256;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > max) { h = Math.round(h * max / w); w = max; } }
+        else { if (h > max) { w = Math.round(w * max / h); h = max; } }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
+        const token = localStorage.getItem("token");
+        fetch("http://localhost:8080/api/user/me", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+          body: JSON.stringify({ fullName: me.name, profilePicture: dataUrl }),
+        })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((u) => {
+            if (u) { setMe((m) => ({ ...m, profilePicture: u.profilePicture || "" })); localStorage.setItem("profilePicture", u.profilePicture || ""); showToast(L("Photo updated ✓", "התמונה עודכנה ✓")); }
+            else showToast(L("Update failed", "העדכון נכשל"), "warning");
+          })
+          .catch(() => showToast(L("Update failed", "העדכון נכשל"), "warning"));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   /* nav */
   const NAV = [
     { id: "overview",   label: L("Overview",   "סקירה"),       Icon: IcoGrid,  badge: null },
@@ -461,7 +495,10 @@ export default function AdminDashboard() {
         {/* Admin info + logout */}
         <div style={{ padding: "14px 12px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.05)", marginBottom: 8 }}>
-            <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg,#7C3AED,#5B21B6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", fontSize: 13, fontWeight: 800, flexShrink: 0 }}>{(me.name || "A").charAt(0).toUpperCase()}</div>
+            <label htmlFor="admin-pfp-input" title={L("Change photo", "החלף תמונה")} style={{ width: 32, height: 32, borderRadius: 9, overflow: "hidden", background: "linear-gradient(135deg,#7C3AED,#5B21B6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", fontSize: 13, fontWeight: 800, flexShrink: 0, cursor: "pointer" }}>
+              {me.profilePicture ? <img src={me.profilePicture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (me.name || "A").charAt(0).toUpperCase()}
+            </label>
+            <input id="admin-pfp-input" type="file" accept="image/*" onChange={uploadAdminPhoto} style={{ display: "none" }} />
             <div className="logo-text">
               <p style={{ fontSize: 12, fontWeight: 700, color: "#FFF" }}>{me.name}</p>
               <p style={{ fontSize: 10, color: "rgba(255,255,255,.35)" }}>{me.email}</p>

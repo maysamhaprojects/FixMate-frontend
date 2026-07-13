@@ -129,7 +129,6 @@ export const ISRAEL_CITIES = [
   { he: "משהד", en: "Meshhed" },
   { he: "נחף", en: "Nahf" },
   { he: "סאג'ור", en: "Sajur" },
-  { he: "סח'נין", en: "Sakhnin" },
   { he: "עוזייר", en: "Uzeir" },
   { he: "עילוט", en: "Ilut" },
   { he: "עין מאהל", en: "Ein Mahil" },

@@ -23,6 +23,7 @@ export default function ClientProfile() {
   const [fullName, setFullName] = useState(localStorage.getItem("fullName") || "");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [profilePicture, setProfilePicture] = useState("");
   const [role, setRole] = useState(localStorage.getItem("role") || "");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,6 +56,7 @@ export default function ClientProfile() {
         setEmail(data.email || "");
         setPhone(data.phone || "");
         setRole(data.role || "");
+        setProfilePicture(data.profilePicture || "");
       })
       .catch((err) => {
         const code = err.message;
@@ -68,6 +70,32 @@ export default function ClientProfile() {
       .finally(() => setLoading(false));
   }, [isHe]);
 
+  /* בחירת תמונה — מכווץ ל-256px ושומר כ-base64 קטן */
+  const onPickImage = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    if (!file.type.startsWith("image/")) {
+      setMessage({ type: "error", text: isHe ? "הקובץ חייב להיות תמונה" : "File must be an image" });
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 256;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > max) { h = Math.round(h * max / w); w = max; } }
+        else { if (h > max) { w = Math.round(w * max / h); h = max; } }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        setProfilePicture(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSave = async () => {
     if (!fullName.trim()) { setMessage({ type: "error", text: isHe ? "שם מלא נדרש" : "Full name is required" }); return; }
     if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
@@ -79,7 +107,7 @@ export default function ClientProfile() {
       const r = await fetch("http://localhost:8080/api/user/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), email: email.trim() }),
+        body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), email: email.trim(), profilePicture: profilePicture || "" }),
       });
       if (!r.ok) {
         let body = ""; try { body = await r.text(); } catch (e) { /* ignore */ }
@@ -90,6 +118,7 @@ export default function ClientProfile() {
       }
       const data = await r.json();
       localStorage.setItem("fullName", data.fullName || fullName.trim());
+      localStorage.setItem("profilePicture", data.profilePicture || ""); // לתצוגה מיידית בדשבורד
       if (data.token) localStorage.setItem("token", data.token); // טוקן חדש אם האימייל השתנה
       setShowSuccess(true);
       // חלונית הצלחה למשך 2.2 שניות ואז חזרה לדשבורד
@@ -134,14 +163,26 @@ export default function ClientProfile() {
 
         {/* Profile header card */}
         <div style={{ background: "#FFF", borderRadius: 20, border: "1px solid #EAEEF5", boxShadow: "0 2px 16px rgba(15,23,42,.04)", padding: "28px 28px", display: "flex", alignItems: "center", gap: 20, marginBottom: 24, flexWrap: "wrap" }}>
-          <div style={{ width: 78, height: 78, borderRadius: "50%", background: "linear-gradient(135deg,#4F6AFF,#7C3AED)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Outfit', sans-serif", fontSize: 34, fontWeight: 800, flexShrink: 0, boxShadow: "0 6px 18px rgba(79,106,255,.35)" }}>
-            {initial}
+          <div style={{ position: "relative", flexShrink: 0 }}>
+            <label htmlFor="pfp-input" style={{ cursor: "pointer", display: "block" }} title={isHe ? "החלף תמונה" : "Change photo"}>
+              <div style={{ width: 78, height: 78, borderRadius: "50%", overflow: "hidden", background: "linear-gradient(135deg,#4F6AFF,#7C3AED)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Outfit', sans-serif", fontSize: 34, fontWeight: 800, boxShadow: "0 6px 18px rgba(79,106,255,.35)" }}>
+                {profilePicture ? <img src={profilePicture} alt="profile" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : initial}
+              </div>
+              <span style={{ position: "absolute", bottom: 0, insetInlineEnd: 0, width: 26, height: 26, borderRadius: "50%", background: "#2563EB", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", border: "2px solid #FFF" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+              </span>
+            </label>
+            <input id="pfp-input" type="file" accept="image/*" onChange={onPickImage} style={{ display: "none" }} />
           </div>
           <div style={{ minWidth: 0 }}>
             <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 24, fontWeight: 800, color: "#1A2B4A", marginBottom: 6 }}>{fullName || (isHe ? "אורח" : "Guest")}</h2>
             <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
               <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20, background: "#EEF2FF", color: "#2563EB" }}>{roleLabel}</span>
               {email && <span style={{ fontSize: 13, color: "#94A3B8" }}>{email}</span>}
+            </div>
+            <div style={{ marginTop: 8, display: "flex", gap: 14 }}>
+              <label htmlFor="pfp-input" style={{ fontSize: 12.5, fontWeight: 600, color: "#2563EB", cursor: "pointer" }}>{isHe ? "העלה תמונה" : "Upload photo"}</label>
+              {profilePicture && <button onClick={() => setProfilePicture("")} style={{ fontSize: 12.5, fontWeight: 600, color: "#EF4444", background: "none", border: "none", cursor: "pointer", fontFamily: "inherit", padding: 0 }}>{isHe ? "הסר" : "Remove"}</button>}
             </div>
           </div>
         </div>

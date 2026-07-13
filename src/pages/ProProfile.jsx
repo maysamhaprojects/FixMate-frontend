@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 
@@ -145,6 +145,9 @@ export default function ProProfile() {
   const [rating, setRating] = useState(0);
   const [reviewCount, setReviewCount] = useState(0);
   const [reviews, setReviews] = useState([]);
+  const [profilePicture, setProfilePicture] = useState("");
+  const fileRef = useRef(null);
+  const pickFile = () => { if (fileRef.current) fileRef.current.click(); };
 
   useEffect(() => { setTimeout(() => setMounted(true), 50); }, []);
 
@@ -180,6 +183,7 @@ export default function ProProfile() {
         setFullName(u.fullName || "");
         setPhone(u.phone || "");
         setEmail(u.email || "");
+        setProfilePicture(u.profilePicture || "");
         setBio(p.bio || "");
         setSpecialty(p.specialty || "");
         setMinPrice(p.hourlyRate != null ? p.hourlyRate : "");
@@ -195,6 +199,45 @@ export default function ProProfile() {
   }, []);
 
   const goBack = () => navigate("/pro/dashboard");
+
+  /* שומר תמונה מיד לשרת (כמו אצל הלקוח — לחיצה ומיד נשמר) */
+  const savePhoto = (dataUrl) => {
+    setProfilePicture(dataUrl);
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8080/api/user/me", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
+      body: JSON.stringify({ fullName: fullName || "", profilePicture: dataUrl }),
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d) { localStorage.setItem("profilePicture", d.profilePicture || ""); setSaved(true); setTimeout(() => setSaved(false), 2500); }
+      })
+      .catch(() => {});
+  };
+
+  /* בחירת תמונה — מכווץ ל-256px ושומר מיד */
+  const onPickImage = (e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file || !file.type.startsWith("image/")) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const img = new Image();
+      img.onload = () => {
+        const max = 256;
+        let w = img.width, h = img.height;
+        if (w > h) { if (w > max) { h = Math.round(h * max / w); w = max; } }
+        else { if (h > max) { w = Math.round(w * max / h); h = max; } }
+        const canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
+        savePhoto(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.src = ev.target.result;
+    };
+    reader.readAsDataURL(file);
+  };
+  const removePhoto = () => savePhoto("");
 
   const handleSave = async () => {
     const token = localStorage.getItem("token");
@@ -215,9 +258,9 @@ export default function ProProfile() {
       const r2 = await fetch("http://localhost:8080/api/user/me", {
         method: "PUT",
         headers: { "Content-Type": "application/json", Authorization: "Bearer " + token },
-        body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim() }),
+        body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), profilePicture: profilePicture || "" }),
       });
-      if (r2.ok) { const d = await r2.json(); localStorage.setItem("fullName", d.fullName || fullName.trim()); }
+      if (r2.ok) { const d = await r2.json(); localStorage.setItem("fullName", d.fullName || fullName.trim()); localStorage.setItem("profilePicture", d.profilePicture || ""); }
       setEditing(false);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
@@ -331,15 +374,16 @@ export default function ProProfile() {
         {/* ── HERO ── */}
         <div style={{ ...card, marginBottom: 24, animation: "fadeUp .35s" }}>
           <div className="pro-hero-flex" style={{ display: "flex", gap: 20, alignItems: "center", flexWrap: "wrap" }}>
-            <div className="pro-hero-avatar" style={{ position: "relative" }}>
-              <div style={{ width: 88, height: 88, borderRadius: 20, background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 26, fontFamily: titleFont, boxShadow: "0 6px 20px rgba(37,99,235,.22)" }}>
-                {(fullName || "?").split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
+            <div className="pro-hero-avatar" style={{ position: "relative" }} onClick={pickFile} title={isHe ? "החלף תמונה" : "Change photo"}>
+              <div style={{ width: 88, height: 88, borderRadius: 20, overflow: "hidden", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 26, fontFamily: titleFont, boxShadow: "0 6px 20px rgba(37,99,235,.22)", cursor: "pointer" }}>
+                {profilePicture
+                  ? <img src={profilePicture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} />
+                  : (fullName || "?").split(/\s+/).filter(Boolean).map((w) => w[0]).slice(0, 2).join("").toUpperCase()}
               </div>
-              {editing && (
-                <button style={{ position: "absolute", bottom: -3, right: -3, width: 30, height: 30, borderRadius: "50%", background: "#2563EB", border: "3px solid #FFF", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", padding: 0 }}>
-                  <IconCamera />
-                </button>
-              )}
+              <span style={{ position: "absolute", bottom: -3, [isRTL ? "left" : "right"]: -3, width: 30, height: 30, borderRadius: "50%", background: "#2563EB", border: "3px solid #FFF", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", padding: 0, cursor: "pointer" }}>
+                <IconCamera />
+              </span>
+              <input ref={fileRef} type="file" accept="image/*" onChange={onPickImage} style={{ display: "none" }} />
             </div>
             <div className="pro-hero-info" style={{ flex: 1, minWidth: 180 }}>
               <h1 style={{ fontFamily: titleFont, fontSize: 24, fontWeight: 800, color: "#1A2B4A", marginBottom: 3 }}>{fullName}</h1>
@@ -348,6 +392,10 @@ export default function ProProfile() {
                 <IconStar />
                 <span style={{ fontSize: 15, fontWeight: 700, color: "#1A2B4A" }}>{reviewCount > 0 ? Number(rating).toFixed(2) : (isHe ? "\u05D7\u05D3\u05E9" : "New")}</span>
                 <span style={{ fontSize: 13, color: "#94A3B8" }}>({reviewCount} {isHe ? "\u05D1\u05D9\u05E7\u05D5\u05E8\u05D5\u05EA" : "reviews"})</span>
+              </div>
+              <div style={{ marginTop: 10, display: "flex", gap: 14 }}>
+                <button onClick={pickFile} style={{ fontSize: 13, fontWeight: 600, color: "#2563EB", cursor: "pointer", background: "none", border: "none", fontFamily: font, padding: 0 }}>{isHe ? "\u05D4\u05E2\u05DC\u05D4 \u05EA\u05DE\u05D5\u05E0\u05D4" : "Upload photo"}</button>
+                {profilePicture && <button onClick={removePhoto} style={{ fontSize: 13, fontWeight: 600, color: "#EF4444", background: "none", border: "none", cursor: "pointer", fontFamily: font, padding: 0 }}>{isHe ? "\u05D4\u05E1\u05E8" : "Remove"}</button>}
               </div>
             </div>
           </div>

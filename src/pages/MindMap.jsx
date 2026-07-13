@@ -1,238 +1,286 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { translate, getLang, getDir } from "../context/LanguageContext";
+import { getLang, getDir } from "../context/LanguageContext";
+
+/*
+  FixMate — Self-Help Center (מרכז עזרה עצמית)
+  ROUTE: /client/mindmap
+  הלקוח בוחר את סוג התקלה ומקבל מדריך שלב-אחר-שלב לפתרון עצמי.
+  אם לא הצליח — כפתור להזמנת בעל מקצוע.
+*/
 
 const IconBack = () => (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="19" y1="12" x2="5" y2="12" />
-    <polyline points="12 19 5 12 12 5" />
+    <line x1="19" y1="12" x2="5" y2="12" /><polyline points="12 19 5 12 12 5" />
+  </svg>
+);
+const IconChevron = ({ open }) => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ transform: open ? "rotate(180deg)" : "none", transition: "transform .2s" }}>
+    <polyline points="6 9 12 15 18 9" />
+  </svg>
+);
+const IconWrench = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
   </svg>
 );
 
-const MAPS_EN = [
+const GUIDES_EN = [
   {
-    id: "boiler", icon: "\u{1F4A7}", title: "Hot Water Troubleshooting",
-    centerColor: "#F59E0B", centerBg: "#FFFBEB",
-    branches: [
-      { label: "Step 1: Check for Hot Water", color: "#F97316", bg: "#FFF7ED",
-        children: ["\u2705 Turn on hot tap \u2014 wait 2 minutes","\u274C No hot water at all \u2192 Go to Step 2","\u26A0\uFE0F Short burst then cold \u2192 Check thermostat (Step 3)"]},
-      { label: "Step 2: Check Power Switch", color: "#10B981", bg: "#ECFDF5",
-        children: ["\uD83D\uDD0C Electric boiler \u2192 Check breaker panel is ON","\u2600\uFE0F Solar heater \u2192 Cloudy day? Use electric backup switch","\uD83D\uDD25 Gas boiler \u2192 Check if pilot light is lit"]},
-      { label: "Step 3: Check Thermostat", color: "#2563EB", bg: "#EEF2FF",
-        children: ["\uD83C\uDF21\uFE0F Set temperature dial to 50-60\u00B0C minimum","\u23F0 Check timer/clock is set to correct time","\u23F3 Wait 30 minutes after adjusting before testing"]},
-      { label: "Step 4: Water Pressure", color: "#8B5CF6", bg: "#F5F3FF",
-        children: ["\uD83D\uDEBF Test water pressure at other taps","\uD83D\uDCC9 Weak from all taps? \u2192 Main valve may be partially closed","\uD83D\uDCCA Low pressure affects boiler \u2014 check filling loop"]},
-      { label: "Step 5: When Did It Start?", color: "#EC4899", bg: "#FDF2F8",
-        children: ["\uD83C\uDF24\uFE0F Sudden? Could be cloudy weather affecting solar heater","\uD83D\uDD28 Started after home repair? A pipe may have been affected","\uD83D\uDD04 Helps determine if temporary or real fault"]},
-      { label: "Step 6: External Signs", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\u{1F4A7} Leaks near boiler \u2192 Call a plumber immediately","\uD83D\uDD0A Banging or whistling noises \u2192 Pressure/air issue","\uD83D\uDFE4 Rusty brown water \u2192 Tank may be corroded \u2192 Call pro!"]},
+    id: "boiler", icon: "💧", title: "Hot Water / Boiler", color: "#F59E0B",
+    desc: "No hot water or boiler issues",
+    steps: [
+      { label: "Check for Hot Water", tips: ["Turn on hot tap — wait 2 minutes", "No hot water at all → go to next step", "Short burst then cold → check the thermostat"] },
+      { label: "Check Power Switch", tips: ["Electric boiler → make sure the breaker is ON", "Solar heater → cloudy day? use the electric backup", "Gas boiler → check the pilot light is lit"] },
+      { label: "Check Thermostat", tips: ["Set temperature to 50-60°C minimum", "Make sure the timer/clock is set correctly", "Wait 30 minutes after adjusting before testing"] },
+      { label: "Check Water Pressure", tips: ["Test water pressure at other taps", "Weak everywhere? The main valve may be partly closed", "Low pressure affects the boiler"] },
+      { label: "Look for External Signs", tips: ["Leaks near the boiler → call a plumber", "Banging or whistling noises → pressure/air issue", "Rusty brown water → tank may be corroded"] },
     ],
   },
   {
-    id: "ac", icon: "\u2744\uFE0F", title: "Air Conditioner Problem",
-    centerColor: "#0891B2", centerBg: "#ECFEFF",
-    branches: [
-      { label: "Step 1: Won\u2019t Turn On", color: "#F97316", bg: "#FFF7ED",
-        children: ["\uD83D\uDD0C Check power supply \u2014 is it plugged in?","\uD83D\uDD0B Replace remote control batteries","\u26A1 Check breaker panel for AC circuit switch"]},
-      { label: "Step 2: Not Cooling", color: "#10B981", bg: "#ECFDF5",
-        children: ["\u2744\uFE0F Set mode to COOL (not FAN or DRY)","\uD83C\uDF21\uFE0F Set temperature at least 3\u00B0C below room temp","\uD83D\uDEAA Close all windows and doors in the room"]},
-      { label: "Step 3: Clean Filters", color: "#2563EB", bg: "#EEF2FF",
-        children: ["\uD83D\uDCCB Open front panel and pull out mesh filters","\uD83D\uDEBF Wash with water and mild soap","\u2600\uFE0F Let dry completely before reinstalling"]},
-      { label: "Step 4: Water Leaks", color: "#8B5CF6", bg: "#F5F3FF",
-        children: ["\uD83D\uDD27 Find and clear clogged drain pipe/hose","\uD83E\uDDCA Ice forming on pipes? \u2192 Likely needs gas refill","\uD83D\uDCD0 Check indoor unit is slightly tilted toward drain"]},
-      { label: "Step 5: Strange Noises", color: "#F59E0B", bg: "#FFFBEB",
-        children: ["\uD83D\uDD29 Rattling \u2192 Check for loose screws or panels","\uD83D\uDE37 Musty smell \u2192 Clean filters and evaporator coils","\uD83D\uDD27 Grinding/motor noise \u2192 Needs professional technician"]},
-      { label: "\u26A0\uFE0F Call Professional", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\uD83D\uDD25 Sparks or burning smell \u2192 TURN OFF immediately!","\uD83D\uDD04 Problem persists after trying all steps above","\u26A1 Any electrical issue \u2192 Must use licensed technician"]},
+    id: "ac", icon: "❄️", title: "Air Conditioner", color: "#0891B2",
+    desc: "AC won't turn on or won't cool",
+    steps: [
+      { label: "Won't Turn On", tips: ["Check the power supply — is it plugged in?", "Replace the remote control batteries", "Check the breaker panel for the AC circuit"] },
+      { label: "Not Cooling", tips: ["Set the mode to COOL (not FAN or DRY)", "Set the temperature at least 3°C below the room", "Close all windows and doors in the room"] },
+      { label: "Clean the Filters", tips: ["Open the front panel and pull out the mesh filters", "Wash with water and mild soap", "Let them dry completely before reinstalling"] },
+      { label: "Water Leaks", tips: ["Find and clear the clogged drain pipe", "Ice on the pipes? → likely needs a gas refill", "Check the indoor unit is tilted toward the drain"] },
+      { label: "Strange Noises", tips: ["Rattling → check for loose screws or panels", "Musty smell → clean filters and coils", "Grinding/motor noise → needs a technician"] },
     ],
   },
   {
-    id: "electrical", icon: "\u26A1", title: "Electrical Short Circuit",
-    centerColor: "#DC2626", centerBg: "#FEF2F2",
-    branches: [
-      { label: "Step 1: Identify Area", color: "#F97316", bg: "#FFF7ED",
-        children: ["\uD83C\uDFE0 Is it the whole house or just one room?","\uD83D\uDD0D Find your electrical panel \u2014 which breaker tripped?","\uD83D\uDCA1 Check if neighbors have power too"]},
-      { label: "Step 2: Check Breaker", color: "#10B981", bg: "#ECFDF5",
-        children: ["\uD83D\uDD04 Reset breaker: Switch firmly OFF, then back ON","\u26A0\uFE0F Keeps tripping immediately? \u2192 Call electrician!","\u2705 Each breaker usually controls one room/area"]},
-      { label: "Step 3: Unplug Devices", color: "#2563EB", bg: "#EEF2FF",
-        children: ["\uD83D\uDD0C Unplug ALL devices in the affected area","1\uFE0F\u20E3 Plug them back ONE at a time and wait","\uD83D\uDD0D The device that causes a trip is the faulty one"]},
-      { label: "Step 4: Check Outlets", color: "#8B5CF6", bg: "#F5F3FF",
-        children: ["\uD83D\uDC40 Burn marks on any outlet? \u2192 Stop using & call pro!","\uD83D\uDD18 GFCI outlet (has buttons)? Press the RESET button","\uD83D\uDC43 Smell burning from outlet? \u2192 Don\u2019t use \u2014 call pro!"]},
-      { label: "\u26A0\uFE0F Safety First!", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\uD83D\uDEAB NEVER touch exposed or damaged wires","\u{1F4A7} Never touch electrical panel with wet hands!","\u260E\uFE0F When in doubt \u2192 Always call a licensed electrician"]},
+    id: "electrical", icon: "⚡", title: "Electrical / Short Circuit", color: "#DC2626",
+    desc: "Power outage or a breaker keeps tripping",
+    steps: [
+      { label: "Identify the Area", tips: ["Is it the whole house or just one room?", "Find your electrical panel — which breaker tripped?", "Check if the neighbors have power too"] },
+      { label: "Reset the Breaker", tips: ["Switch it firmly OFF, then back ON", "Keeps tripping immediately? → call an electrician", "Each breaker usually controls one room"] },
+      { label: "Unplug Devices", tips: ["Unplug ALL devices in the affected area", "Plug them back one at a time and wait", "The device that trips it is the faulty one"] },
+      { label: "Check the Outlets", tips: ["Burn marks on an outlet? → stop using it", "GFCI outlet (has buttons)? press RESET", "Burning smell? → don't use — call a pro"] },
+      { label: "⚠️ Safety First", tips: ["Never touch exposed or damaged wires", "Never touch the panel with wet hands", "When in doubt → call a licensed electrician"] },
     ],
   },
   {
-    id: "plumbing", icon: "\uD83D\uDEB0", title: "Plumbing Issues",
-    centerColor: "#7C3AED", centerBg: "#F5F3FF",
-    branches: [
-      { label: "Clogged Drain", color: "#F97316", bg: "#FFF7ED",
-        children: ["1\uFE0F\u20E3 Pour boiling water slowly down the drain","2\uFE0F\u20E3 Baking soda + vinegar \u2192 cover & wait 30 min","3\uFE0F\u20E3 Flush with hot water, then try plunger","4\uFE0F\u20E3 Still blocked? \u2192 Use a drain snake (\u20AA20-40)"]},
-      { label: "Dripping Faucet", color: "#10B981", bg: "#ECFDF5",
-        children: ["1\uFE0F\u20E3 Turn off water supply valves under the sink","2\uFE0F\u20E3 Remove faucet handle (screw usually under cap)","3\uFE0F\u20E3 Pull out cartridge \u2014 replace washer or O-ring","4\uFE0F\u20E3 Reassemble and turn water back on to test"]},
-      { label: "Running Toilet", color: "#2563EB", bg: "#EEF2FF",
-        children: ["1\uFE0F\u20E3 Remove tank lid and flush \u2014 watch what happens","2\uFE0F\u20E3 Flapper not sealing? \u2192 Replace it (\u20AA15-25)","3\uFE0F\u20E3 Water overflows tube? \u2192 Adjust the float lower","4\uFE0F\u20E3 Turn off water, swap part, turn back on & test"]},
-      { label: "Pipe Leak", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\u{1F4A7} Small drip at connection \u2192 Tighten gently with wrench","\uD83D\uDD27 Wrap pipe threads with Teflon tape for better seal","\uD83D\uDEA8 Major leak / spray \u2192 SHUT MAIN WATER VALVE now!","\u260E\uFE0F Place towels/buckets \u2014 call plumber immediately"]},
-    ],
-  },
-];
-
-const MAPS_HE = [
-  {
-    id: "boiler", icon: "\u{1F4A7}", title: "\u05EA\u05E7\u05DC\u05D5\u05EA \u05DE\u05D9\u05DD \u05D7\u05DE\u05D9\u05DD",
-    centerColor: "#F59E0B", centerBg: "#FFFBEB",
-    branches: [
-      { label: "\u05E9\u05DC\u05D1 1: \u05D1\u05D3\u05E7\u05D5 \u05DE\u05D9\u05DD \u05D7\u05DE\u05D9\u05DD", color: "#F97316", bg: "#FFF7ED",
-        children: ["\u2705 \u05E4\u05EA\u05D7\u05D5 \u05D1\u05E8\u05D6 \u05D7\u05DD \u2014 \u05D7\u05DB\u05D5 2 \u05D3\u05E7\u05D5\u05EA","\u274C \u05D0\u05D9\u05DF \u05DE\u05D9\u05DD \u05D7\u05DE\u05D9\u05DD \u05D1\u05DB\u05DC\u05DC \u2192 \u05E2\u05D1\u05E8\u05D5 \u05DC\u05E9\u05DC\u05D1 2","\u26A0\uFE0F \u05D4\u05EA\u05E4\u05E8\u05E6\u05D5\u05EA \u05E7\u05E6\u05E8\u05D5\u05EA \u05D5\u05D0\u05D6 \u05E7\u05E8 \u2192 \u05D1\u05D3\u05E7\u05D5 \u05EA\u05E8\u05DE\u05D5\u05E1\u05D8\u05D8 (\u05E9\u05DC\u05D1 3)"]},
-      { label: "\u05E9\u05DC\u05D1 2: \u05D1\u05D3\u05E7\u05D5 \u05D7\u05E9\u05DE\u05DC", color: "#10B981", bg: "#ECFDF5",
-        children: ["\uD83D\uDD0C \u05D1\u05D5\u05D9\u05DC\u05E8 \u05D7\u05E9\u05DE\u05DC\u05D9 \u2192 \u05D1\u05D3\u05E7\u05D5 \u05E9\u05D4\u05DE\u05E4\u05E1\u05E7 \u05D3\u05DC\u05D5\u05E7","\u2600\uFE0F \u05D3\u05D5\u05D3 \u05E9\u05DE\u05E9 \u2192 \u05D9\u05D5\u05DD \u05DE\u05E2\u05D5\u05E0\u05DF? \u05D4\u05E4\u05E2\u05D9\u05DC\u05D5 \u05D2\u05D9\u05D1\u05D5\u05D9 \u05D7\u05E9\u05DE\u05DC\u05D9","\uD83D\uDD25 \u05D1\u05D5\u05D9\u05DC\u05E8 \u05D2\u05D6 \u2192 \u05D1\u05D3\u05E7\u05D5 \u05E9\u05D4\u05DC\u05D4\u05D1\u05D4 \u05D3\u05D5\u05DC\u05E7\u05EA"]},
-      { label: "\u05E9\u05DC\u05D1 3: \u05D1\u05D3\u05E7\u05D5 \u05EA\u05E8\u05DE\u05D5\u05E1\u05D8\u05D8", color: "#2563EB", bg: "#EEF2FF",
-        children: ["\uD83C\uDF21\uFE0F \u05DB\u05D5\u05D5\u05E0\u05D5 \u05D8\u05DE\u05E4\u05E8\u05D8\u05D5\u05E8\u05D4 \u05DC-50-60 \u05DE\u05E2\u05DC\u05D5\u05EA","\u23F0 \u05D1\u05D3\u05E7\u05D5 \u05E9\u05D4\u05D8\u05D9\u05D9\u05DE\u05E8 \u05DE\u05DB\u05D5\u05D5\u05DF \u05E0\u05DB\u05D5\u05DF","\u23F3 \u05D7\u05DB\u05D5 30 \u05D3\u05E7\u05D5\u05EA \u05D0\u05D7\u05E8\u05D9 \u05DB\u05D9\u05D5\u05D5\u05E0\u05D5\u05DF"]},
-      { label: "\u05E9\u05DC\u05D1 4: \u05DC\u05D7\u05E5 \u05DE\u05D9\u05DD", color: "#8B5CF6", bg: "#F5F3FF",
-        children: ["\uD83D\uDEBF \u05D1\u05D3\u05E7\u05D5 \u05DC\u05D7\u05E5 \u05DE\u05D9\u05DD \u05D1\u05D1\u05E8\u05D6\u05D9\u05DD \u05D0\u05D7\u05E8\u05D9\u05DD","\uD83D\uDCC9 \u05D7\u05DC\u05E9 \u05D1\u05DB\u05DC \u05D4\u05D1\u05E8\u05D6\u05D9\u05DD? \u2192 \u05D0\u05D5\u05DC\u05D9 \u05D4\u05E9\u05E1\u05EA\u05D5\u05DD \u05E1\u05D2\u05D5\u05E8 \u05D7\u05DC\u05E7\u05D9\u05EA","\uD83D\uDCCA \u05DC\u05D7\u05E5 \u05E0\u05DE\u05D5\u05DA \u05DE\u05E9\u05E4\u05D9\u05E2 \u05E2\u05DC \u05D4\u05D1\u05D5\u05D9\u05DC\u05E8"]},
-      { label: "\u05E9\u05DC\u05D1 5: \u05DE\u05EA\u05D9 \u05D6\u05D4 \u05D4\u05EA\u05D7\u05D9\u05DC?", color: "#EC4899", bg: "#FDF2F8",
-        children: ["\uD83C\uDF24\uFE0F \u05E4\u05EA\u05D0\u05D5\u05DD? \u05D0\u05D5\u05DC\u05D9 \u05DE\u05D6\u05D2 \u05D0\u05D5\u05D9\u05E8 \u05DE\u05E2\u05D5\u05E0\u05DF","\uD83D\uDD28 \u05D4\u05EA\u05D7\u05D9\u05DC \u05D0\u05D7\u05E8\u05D9 \u05EA\u05D9\u05E7\u05D5\u05DF? \u05D0\u05D5\u05DC\u05D9 \u05E6\u05D9\u05E0\u05D5\u05E8 \u05E0\u05E4\u05D2\u05E2","\uD83D\uDD04 \u05E2\u05D5\u05D6\u05E8 \u05DC\u05D4\u05D1\u05D9\u05DF \u05D0\u05DD \u05D6\u05D4 \u05D6\u05DE\u05E0\u05D9 \u05D0\u05D5 \u05EA\u05E7\u05DC\u05D4"]},
-      { label: "\u05E9\u05DC\u05D1 6: \u05E1\u05D9\u05DE\u05E0\u05D9\u05DD \u05D7\u05D9\u05E6\u05D5\u05E0\u05D9\u05D9\u05DD", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\u{1F4A7} \u05E0\u05D6\u05D9\u05DC\u05D5\u05EA \u05DC\u05D9\u05D3 \u05D4\u05D1\u05D5\u05D9\u05DC\u05E8 \u2192 \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05E9\u05E8\u05D1\u05E8\u05D1!","\uD83D\uDD0A \u05E8\u05E2\u05E9\u05D9\u05DD \u05D0\u05D5 \u05E6\u05E4\u05D9\u05E8\u05D5\u05EA \u2192 \u05D1\u05E2\u05D9\u05D9\u05EA \u05DC\u05D7\u05E5/\u05D0\u05D5\u05D5\u05D9\u05E8","\uD83D\uDFE4 \u05DE\u05D9\u05DD \u05D7\u05D5\u05DE\u05D9\u05DD \u2192 \u05D4\u05DE\u05DB\u05DC \u05D7\u05DC\u05D5\u05D3 \u2192 \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05DE\u05E7\u05E6\u05D5\u05E2\u05DF!"]},
+    id: "plumbing", icon: "🚰", title: "Plumbing", color: "#7C3AED",
+    desc: "Clogged drain, leak, or dripping faucet",
+    steps: [
+      { label: "Clogged Drain", tips: ["Pour boiling water slowly down the drain", "Baking soda + vinegar → cover & wait 30 min", "Flush with hot water, then try a plunger", "Still blocked? → use a drain snake (₪20-40)"] },
+      { label: "Dripping Faucet", tips: ["Turn off the water valves under the sink", "Remove the handle (screw usually under the cap)", "Replace the washer or O-ring", "Reassemble and turn the water back on"] },
+      { label: "Running Toilet", tips: ["Remove the tank lid and flush — watch what happens", "Flapper not sealing? → replace it (₪15-25)", "Water overflows the tube? → lower the float"] },
+      { label: "Pipe Leak", tips: ["Small drip at a connection → tighten gently", "Wrap threads with Teflon tape to seal", "Major leak → SHUT the main water valve now!", "Place towels/buckets and call a plumber"] },
     ],
   },
   {
-    id: "ac", icon: "\u2744\uFE0F", title: "\u05EA\u05E7\u05DC\u05D5\u05EA \u05DE\u05D6\u05D2\u05DF",
-    centerColor: "#0891B2", centerBg: "#ECFEFF",
-    branches: [
-      { label: "\u05E9\u05DC\u05D1 1: \u05DC\u05D0 \u05E0\u05D3\u05DC\u05E7", color: "#F97316", bg: "#FFF7ED",
-        children: ["\uD83D\uDD0C \u05D1\u05D3\u05E7\u05D5 \u05D7\u05D9\u05D1\u05D5\u05E8 \u05DC\u05D7\u05E9\u05DE\u05DC","\uD83D\uDD0B \u05D4\u05D7\u05DC\u05D9\u05E4\u05D5 \u05E1\u05D5\u05DC\u05DC\u05D5\u05EA \u05D1\u05E9\u05DC\u05D8","\u26A1 \u05D1\u05D3\u05E7\u05D5 \u05DE\u05E4\u05E1\u05E7 \u05D7\u05E9\u05DE\u05DC \u05DC\u05DE\u05D6\u05D2\u05DF"]},
-      { label: "\u05E9\u05DC\u05D1 2: \u05DC\u05D0 \u05DE\u05E7\u05E8\u05E8", color: "#10B981", bg: "#ECFDF5",
-        children: ["\u2744\uFE0F \u05D5\u05D3\u05D0\u05D5 \u05E9\u05D4\u05DE\u05E6\u05D1 \u05E2\u05DC COOL","\uD83C\uDF21\uFE0F \u05DB\u05D5\u05D5\u05E0\u05D5 \u05D8\u05DE\u05E4\u05E8\u05D8\u05D5\u05E8\u05D4 3 \u05DE\u05E2\u05DC\u05D5\u05EA \u05DE\u05EA\u05D7\u05EA \u05D4\u05D7\u05D3\u05E8","\uD83D\uDEAA \u05E1\u05D2\u05E8\u05D5 \u05D7\u05DC\u05D5\u05E0\u05D5\u05EA \u05D5\u05D3\u05DC\u05EA\u05D5\u05EA"]},
-      { label: "\u05E9\u05DC\u05D1 3: \u05E0\u05D9\u05E7\u05D5\u05D9 \u05E4\u05D9\u05DC\u05D8\u05E8\u05D9\u05DD", color: "#2563EB", bg: "#EEF2FF",
-        children: ["\uD83D\uDCCB \u05E4\u05EA\u05D7\u05D5 \u05DE\u05DB\u05E1\u05D4 \u05D5\u05D4\u05D5\u05E6\u05D9\u05D0\u05D5 \u05E4\u05D9\u05DC\u05D8\u05E8\u05D9\u05DD","\uD83D\uDEBF \u05E9\u05D8\u05E4\u05D5 \u05D1\u05DE\u05D9\u05DD \u05D5\u05E1\u05D1\u05D5\u05DF \u05E2\u05D3\u05D9\u05DF","\u2600\uFE0F \u05D9\u05D9\u05D1\u05E9\u05D5 \u05DC\u05D2\u05DE\u05E8\u05D9 \u05DC\u05E4\u05E0\u05D9 \u05D4\u05D7\u05D6\u05E8\u05D4"]},
-      { label: "\u05E9\u05DC\u05D1 4: \u05E0\u05D6\u05D9\u05DC\u05EA \u05DE\u05D9\u05DD", color: "#8B5CF6", bg: "#F5F3FF",
-        children: ["\uD83D\uDD27 \u05D0\u05EA\u05E8\u05D5 \u05D5\u05E0\u05E7\u05D5 \u05E6\u05D9\u05E0\u05D5\u05E8 \u05E0\u05D9\u05E7\u05D5\u05D6 \u05E1\u05EA\u05D5\u05DD","\uD83E\uDDCA \u05E7\u05E8\u05D7 \u05E2\u05DC \u05D4\u05E6\u05D9\u05E0\u05D5\u05E8\u05D5\u05EA? \u2192 \u05E6\u05E8\u05D9\u05DA \u05DE\u05D9\u05DC\u05D5\u05D9 \u05D2\u05D6","\uD83D\uDCD0 \u05D1\u05D3\u05E7\u05D5 \u05E9\u05D4\u05D9\u05D7\u05D9\u05D3\u05D4 \u05DE\u05D5\u05D8\u05D4 \u05DC\u05DB\u05D9\u05D5\u05D5\u05DF \u05D4\u05E0\u05D9\u05E7\u05D5\u05D6"]},
-      { label: "\u05E9\u05DC\u05D1 5: \u05E8\u05E2\u05E9\u05D9\u05DD \u05DE\u05D5\u05D6\u05E8\u05D9\u05DD", color: "#F59E0B", bg: "#FFFBEB",
-        children: ["\uD83D\uDD29 \u05E8\u05E2\u05E9 \u2192 \u05D1\u05D3\u05E7\u05D5 \u05D1\u05E8\u05D2\u05D9\u05DD \u05E8\u05D5\u05E4\u05E4\u05D9\u05DD","\uD83D\uDE37 \u05E8\u05D9\u05D7 \u05E8\u05E2 \u2192 \u05E0\u05E7\u05D5 \u05E4\u05D9\u05DC\u05D8\u05E8\u05D9\u05DD \u05D5\u05DE\u05D0\u05D9\u05D9\u05D3","\uD83D\uDD27 \u05E8\u05E2\u05E9 \u05DE\u05E0\u05D5\u05E2 \u2192 \u05E6\u05E8\u05D9\u05DA \u05D8\u05DB\u05E0\u05D0\u05D9"]},
-      { label: "\u26A0\uFE0F \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05DE\u05E7\u05E6\u05D5\u05E2\u05DF", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\uD83D\uDD25 \u05E0\u05D9\u05E6\u05D5\u05E6\u05D5\u05EA \u05D0\u05D5 \u05E8\u05D9\u05D7 \u05E9\u05E8\u05D9\u05E4\u05D4 \u2192 \u05DB\u05D1\u05D5 \u05DE\u05D9\u05D3!","\uD83D\uDD04 \u05D4\u05D1\u05E2\u05D9\u05D4 \u05E0\u05DE\u05E9\u05DB\u05EA \u05D0\u05D7\u05E8\u05D9 \u05DB\u05DC \u05D4\u05E9\u05DC\u05D1\u05D9\u05DD","\u26A1 \u05DB\u05DC \u05D1\u05E2\u05D9\u05D4 \u05D7\u05E9\u05DE\u05DC\u05D9\u05EA \u2192 \u05D7\u05D5\u05D1\u05D4 \u05D8\u05DB\u05E0\u05D0\u05D9 \u05DE\u05D5\u05E1\u05DE\u05DA"]},
+    id: "lock", icon: "🔑", title: "Lock / Door", color: "#475569",
+    desc: "Stuck lock, key won't turn, or door won't lock",
+    steps: [
+      { label: "Key Won't Turn / Enter", tips: ["Try a backup key — yours may be worn", "Add a little lubricant (WD-40 / graphite) to the keyhole", "Don't force it — a key that snaps inside is worse"] },
+      { label: "Door Won't Lock", tips: ["Check the bolt slides in and out freely", "Check the lock is aligned with the door frame", "Loose screws in the cylinder? tighten them"] },
+      { label: "Locked Out", tips: ["Check for an open window or back door", "Do a neighbor / family member have a spare key?", "Don't break the door — a locksmith is cheaper"] },
+      { label: "⚠️ When to Call a Locksmith", tips: ["Key snapped inside the lock", "Cylinder spins freely without locking", "You want to replace or upgrade the lock"] },
     ],
   },
   {
-    id: "electrical", icon: "\u26A1", title: "\u05E7\u05E6\u05E8 \u05D7\u05E9\u05DE\u05DC\u05D9",
-    centerColor: "#DC2626", centerBg: "#FEF2F2",
-    branches: [
-      { label: "\u05E9\u05DC\u05D1 1: \u05D0\u05EA\u05E8\u05D5 \u05D0\u05EA \u05D4\u05D0\u05D6\u05D5\u05E8", color: "#F97316", bg: "#FFF7ED",
-        children: ["\uD83C\uDFE0 \u05DB\u05DC \u05D4\u05D1\u05D9\u05EA \u05D0\u05D5 \u05E8\u05E7 \u05D7\u05D3\u05E8 \u05D0\u05D7\u05D3?","\uD83D\uDD0D \u05DE\u05E6\u05D0\u05D5 \u05D0\u05EA \u05DC\u05D5\u05D7 \u05D4\u05D7\u05E9\u05DE\u05DC \u2014 \u05D0\u05D9\u05D6\u05D4 \u05DE\u05E4\u05E1\u05E7 \u05E0\u05E4\u05DC?","\uD83D\uDCA1 \u05D1\u05D3\u05E7\u05D5 \u05D0\u05DD \u05D2\u05DD \u05DC\u05E9\u05DB\u05E0\u05D9\u05DD \u05D0\u05D9\u05DF \u05D7\u05E9\u05DE\u05DC"]},
-      { label: "\u05E9\u05DC\u05D1 2: \u05D1\u05D3\u05E7\u05D5 \u05DE\u05E4\u05E1\u05E7", color: "#10B981", bg: "#ECFDF5",
-        children: ["\uD83D\uDD04 \u05D0\u05E4\u05E1\u05D5: \u05DB\u05D1\u05D5 \u05DC\u05D2\u05DE\u05E8\u05D9 \u05D5\u05D0\u05D6 \u05D4\u05D3\u05DC\u05D9\u05E7\u05D5 \u05DE\u05D7\u05D3\u05E9","\u26A0\uFE0F \u05E0\u05D5\u05E4\u05DC \u05E9\u05D5\u05D1 \u05DE\u05D9\u05D3? \u2192 \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05D7\u05E9\u05DE\u05DC\u05D0\u05D9!","\u2705 \u05DB\u05DC \u05DE\u05E4\u05E1\u05E7 \u05E9\u05D5\u05DC\u05D8 \u05E2\u05DC \u05D7\u05D3\u05E8 \u05D0\u05D7\u05D3"]},
-      { label: "\u05E9\u05DC\u05D1 3: \u05E0\u05EA\u05E7\u05D5 \u05DE\u05DB\u05E9\u05D9\u05E8\u05D9\u05DD", color: "#2563EB", bg: "#EEF2FF",
-        children: ["\uD83D\uDD0C \u05E0\u05EA\u05E7\u05D5 \u05D0\u05EA \u05DB\u05DC \u05D4\u05DE\u05DB\u05E9\u05D9\u05E8\u05D9\u05DD \u05D1\u05D0\u05D6\u05D5\u05E8","1\uFE0F\u20E3 \u05D7\u05D1\u05E8\u05D5 \u05D7\u05D6\u05E8\u05D4 \u05D0\u05D7\u05D3 \u05D0\u05D7\u05D3 \u05D5\u05D7\u05DB\u05D5","\uD83D\uDD0D \u05D4\u05DE\u05DB\u05E9\u05D9\u05E8 \u05E9\u05D2\u05D5\u05E8\u05DD \u05DC\u05E0\u05E4\u05D9\u05DC\u05D4 \u05D4\u05D5\u05D0 \u05D4\u05EA\u05E7\u05D5\u05DC"]},
-      { label: "\u05E9\u05DC\u05D1 4: \u05D1\u05D3\u05E7\u05D5 \u05E9\u05E7\u05E2\u05D9\u05DD", color: "#8B5CF6", bg: "#F5F3FF",
-        children: ["\uD83D\uDC40 \u05E1\u05D9\u05DE\u05E0\u05D9 \u05E9\u05E8\u05D9\u05E4\u05D4 \u05E2\u05DC \u05E9\u05E7\u05E2? \u2192 \u05D4\u05E4\u05E1\u05D9\u05E7\u05D5 \u05E9\u05D9\u05DE\u05D5\u05E9!","\uD83D\uDD18 \u05E9\u05E7\u05E2 \u05E2\u05DD \u05DB\u05E4\u05EA\u05D5\u05E8\u05D9\u05DD? \u05DC\u05D7\u05E6\u05D5 RESET","\uD83D\uDC43 \u05E8\u05D9\u05D7 \u05E9\u05E8\u05D9\u05E4\u05D4 \u05DE\u05E9\u05E7\u05E2? \u2192 \u05D0\u05DC \u05EA\u05E9\u05EA\u05DE\u05E9\u05D5 \u2014 \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05DE\u05E7\u05E6\u05D5\u05E2\u05DF!"]},
-      { label: "\u26A0\uFE0F \u05D1\u05D8\u05D9\u05D7\u05D5\u05EA \u05E7\u05D5\u05D3\u05DD!", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\uD83D\uDEAB \u05DC\u05E2\u05D5\u05DC\u05DD \u05D0\u05DC \u05EA\u05D9\u05D2\u05E2\u05D5 \u05D1\u05D7\u05D5\u05D8\u05D9\u05DD \u05D7\u05E9\u05D5\u05E4\u05D9\u05DD","\u{1F4A7} \u05DC\u05E2\u05D5\u05DC\u05DD \u05D0\u05DC \u05EA\u05D9\u05D2\u05E2\u05D5 \u05D1\u05DC\u05D5\u05D7 \u05D7\u05E9\u05DE\u05DC \u05E2\u05DD \u05D9\u05D3\u05D9\u05D9\u05DD \u05E8\u05D8\u05D5\u05D1\u05D5\u05EA!","\u260E\uFE0F \u05D1\u05E1\u05E4\u05E7? \u2192 \u05EA\u05DE\u05D9\u05D3 \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05D7\u05E9\u05DE\u05DC\u05D0\u05D9 \u05DE\u05D5\u05E1\u05DE\u05DA"]},
+    id: "paint", icon: "🎨", title: "Paint / Walls", color: "#EC4899",
+    desc: "Stains, peeling paint, or mold on the wall",
+    steps: [
+      { label: "Wall Stains", tips: ["Grease stain → warm water + mild dish soap", "Pencil/marker → a melamine 'magic eraser'", "Don't scrub hard — it can remove the paint"] },
+      { label: "Peeling Paint", tips: ["Scrape off the peeling paint with a putty knife", "Lightly sand and clean off the dust", "Apply a primer coat before the new paint"] },
+      { label: "Mold (black spots)", tips: ["Ventilate — mold comes from moisture", "Clean with water + vinegar or diluted bleach (careful)", "Mold keeps coming back? → a damp problem in the wall"] },
+      { label: "Prepping to Paint", tips: ["Fill cracks and holes with filler", "Sand smooth", "Mask frames and sockets with painter's tape"] },
     ],
   },
   {
-    id: "plumbing", icon: "\uD83D\uDEB0", title: "\u05EA\u05E7\u05DC\u05D5\u05EA \u05D0\u05D9\u05E0\u05E1\u05D8\u05DC\u05E6\u05D9\u05D4",
-    centerColor: "#7C3AED", centerBg: "#F5F3FF",
-    branches: [
-      { label: "\u05E0\u05D9\u05E7\u05D5\u05D6 \u05E1\u05EA\u05D5\u05DD", color: "#F97316", bg: "#FFF7ED",
-        children: ["1\uFE0F\u20E3 \u05E9\u05E4\u05DB\u05D5 \u05DE\u05D9\u05DD \u05E8\u05D5\u05EA\u05D7\u05D9\u05DD \u05DC\u05D0\u05D8 \u05DC\u05E0\u05D9\u05E7\u05D5\u05D6","2\uFE0F\u20E3 \u05E1\u05D5\u05D3\u05D4 + \u05D7\u05D5\u05DE\u05E5 \u2192 \u05DB\u05E1\u05D5 \u05D5\u05D7\u05DB\u05D5 30 \u05D3\u05E7\u05D5\u05EA","3\uFE0F\u20E3 \u05E9\u05D8\u05E4\u05D5 \u05E2\u05DD \u05DE\u05D9\u05DD \u05D7\u05DE\u05D9\u05DD, \u05E0\u05E1\u05D5 \u05E4\u05D5\u05DE\u05E4\u05D4","4\uFE0F\u20E3 \u05E2\u05D3\u05D9\u05D9\u05DF \u05E1\u05EA\u05D5\u05DD? \u2192 \u05E1\u05E4\u05D9\u05E8\u05DC\u05D4 (\u20AA20-40)"]},
-      { label: "\u05D1\u05E8\u05D6 \u05DE\u05D8\u05E4\u05D8\u05E3", color: "#10B981", bg: "#ECFDF5",
-        children: ["1\uFE0F\u20E3 \u05E1\u05D2\u05E8\u05D5 \u05D0\u05E1\u05E4\u05E7\u05EA \u05DE\u05D9\u05DD \u05DE\u05EA\u05D7\u05EA \u05D4\u05DB\u05D9\u05D5\u05E8","2\uFE0F\u20E3 \u05D4\u05E1\u05D9\u05E8\u05D5 \u05D9\u05D3\u05D9\u05EA (\u05D1\u05D5\u05E8\u05D2 \u05DE\u05EA\u05D7\u05EA \u05DB\u05D9\u05E1\u05D5\u05D9)","3\uFE0F\u20E3 \u05D4\u05D5\u05E6\u05D9\u05D0\u05D5 \u05E7\u05E8\u05D8\u05E8\u05D9\u05D3\u05D2 \u2014 \u05D4\u05D7\u05DC\u05D9\u05E4\u05D5 \u05D0\u05D8\u05DD \u05D0\u05D5 O-ring","4\uFE0F\u20E3 \u05D4\u05E8\u05DB\u05D9\u05D1\u05D5 \u05D5\u05E4\u05EA\u05D7\u05D5 \u05DE\u05D9\u05DD \u05DC\u05D1\u05D3\u05D9\u05E7\u05D4"]},
-      { label: "\u05D0\u05E1\u05DC\u05D4 \u05D3\u05D5\u05DC\u05E4\u05EA", color: "#2563EB", bg: "#EEF2FF",
-        children: ["1\uFE0F\u20E3 \u05D4\u05E1\u05D9\u05E8\u05D5 \u05DE\u05DB\u05E1\u05D4 \u05D5\u05D4\u05E8\u05D9\u05DE\u05D5 \u2014 \u05E6\u05E4\u05D5 \u05DE\u05D4 \u05E7\u05D5\u05E8\u05D4","2\uFE0F\u20E3 \u05D4\u05E9\u05E1\u05EA\u05D5\u05DD \u05DC\u05D0 \u05D0\u05D5\u05D8\u05DD? \u2192 \u05D4\u05D7\u05DC\u05D9\u05E4\u05D5 (\u20AA15-25)","3\uFE0F\u20E3 \u05DE\u05D9\u05DD \u05E2\u05D5\u05DC\u05D9\u05DD \u05DE\u05D4\u05E6\u05D9\u05E0\u05D5\u05E8? \u2192 \u05D4\u05D5\u05E8\u05D9\u05D3\u05D5 \u05D0\u05EA \u05D4\u05DE\u05E6\u05D5\u05E3","4\uFE0F\u20E3 \u05E1\u05D2\u05E8\u05D5 \u05DE\u05D9\u05DD, \u05D4\u05D7\u05DC\u05D9\u05E4\u05D5, \u05E4\u05EA\u05D7\u05D5 \u05D5\u05D1\u05D3\u05E7\u05D5"]},
-      { label: "\u05E0\u05D6\u05D9\u05DC\u05EA \u05E6\u05D9\u05E0\u05D5\u05E8", color: "#EF4444", bg: "#FEF2F2",
-        children: ["\u{1F4A7} \u05D8\u05E4\u05D8\u05D5\u05E3 \u05D1\u05D7\u05D9\u05D1\u05D5\u05E8 \u2192 \u05D4\u05D3\u05E7\u05D5 \u05D1\u05E2\u05D3\u05D9\u05E0\u05D5\u05EA \u05E2\u05DD \u05DE\u05E4\u05EA\u05D7","\uD83D\uDD27 \u05E2\u05D8\u05E4\u05D5 \u05D7\u05D5\u05D8\u05D9\u05DD \u05D1\u05D8\u05E4\u05DC\u05D5\u05DF \u05DC\u05D0\u05D9\u05D8\u05D5\u05DD","\uD83D\uDEA8 \u05E0\u05D6\u05D9\u05DC\u05D4 \u05D2\u05D3\u05D5\u05DC\u05D4 \u2192 \u05E1\u05D2\u05E8\u05D5 \u05D1\u05E8\u05D6 \u05E8\u05D0\u05E9\u05D9 \u05DE\u05D9\u05D3!","\u260E\uFE0F \u05E9\u05D9\u05DE\u05D5 \u05DE\u05D2\u05D1\u05D5\u05EA \u2014 \u05D4\u05D6\u05DE\u05D9\u05E0\u05D5 \u05E9\u05E8\u05D1\u05E8\u05D1 \u05DE\u05D9\u05D3"]},
+    id: "carpentry", icon: "🔨", title: "Furniture / Carpentry", color: "#B45309",
+    desc: "Squeaky door, loose hinge, or a sticking drawer",
+    steps: [
+      { label: "Squeaky Hinge", tips: ["Add oil / petroleum jelly to the hinge", "Swing the door back and forth to spread it", "Still squeaks? → remove and clean the hinge pin"] },
+      { label: "Loose Hinge / Handle", tips: ["Tighten the screws with a screwdriver", "Screw spins freely? → add a wood toothpick + glue", "Use slightly longer screws if needed"] },
+      { label: "Sticking Drawer", tips: ["Empty it and check nothing is stuck behind", "Rub dry soap or a candle on the slide rails", "Check the rails aren't bent or loose"] },
+      { label: "Wobbly Furniture", tips: ["Find the short leg — add a pad underneath", "Tighten all the screw joints", "Wood glue in loose joints → clamp and let dry"] },
+    ],
+  },
+  {
+    id: "washer", icon: "🧺", title: "Washing Machine", color: "#0EA5E9",
+    desc: "Won't drain, leaking, or won't start",
+    steps: [
+      { label: "Won't Start", tips: ["Make sure the door is fully closed (click)", "Check the power and the breaker", "Make sure the water tap is open"] },
+      { label: "Won't Drain / Water Left", tips: ["Check the drain hose isn't kinked or blocked", "Clean the pump filter (bottom of the machine)", "Turn off, wait 10 min, try a spin program"] },
+      { label: "Leaking Water", tips: ["Check the inlet/outlet hose connections", "Don't overload the machine", "Damaged door seal? → a common leak source"] },
+      { label: "Noisy / Shaking", tips: ["Make sure the machine is level on the floor", "Spread the laundry evenly in the drum", "New machine? make sure transit bolts were removed"] },
     ],
   },
 ];
 
-function getMaps() {
-  var curLang = "en"; try { curLang = localStorage.getItem("fixmate_lang") || "en"; } catch(e) {}
-  return curLang === "he" ? MAPS_HE : MAPS_EN;
-}
+const GUIDES_HE = [
+  {
+    id: "boiler", icon: "💧", title: "מים חמים / בוילר", color: "#F59E0B",
+    desc: "אין מים חמים או תקלות בוילר",
+    steps: [
+      { label: "בדקו מים חמים", tips: ["פתחו ברז חם — חכו 2 דקות", "אין מים חמים בכלל → עברו לשלב הבא", "התפרצות קצרה ואז קר → בדקו את התרמוסטט"] },
+      { label: "בדקו את המפסק", tips: ["בוילר חשמלי → ודאו שהמפסק דלוק", "דוד שמש → יום מעונן? הפעילו גיבוי חשמלי", "בוילר גז → בדקו שהלהבה דולקת"] },
+      { label: "בדקו תרמוסטט", tips: ["כוונו טמפרטורה ל-50-60 מעלות לפחות", "ודאו שהטיימר מכוון נכון", "חכו 30 דקות אחרי כיוונון לפני בדיקה"] },
+      { label: "בדקו לחץ מים", tips: ["בדקו לחץ מים בברזים אחרים", "חלש בכל מקום? השסתום הראשי אולי סגור חלקית", "לחץ נמוך משפיע על הבוילר"] },
+      { label: "חפשו סימנים חיצוניים", tips: ["נזילות ליד הבוילר → הזמינו שרברב", "רעשים או צפירות → בעיית לחץ/אוויר", "מים חומים חלודים → המכל אולי חלוד"] },
+    ],
+  },
+  {
+    id: "ac", icon: "❄️", title: "מזגן", color: "#0891B2",
+    desc: "המזגן לא נדלק או לא מקרר",
+    steps: [
+      { label: "לא נדלק", tips: ["בדקו חיבור לחשמל — מחובר לשקע?", "החליפו סוללות בשלט", "בדקו את מפסק החשמל של המזגן"] },
+      { label: "לא מקרר", tips: ["כוונו למצב COOL (לא FAN או DRY)", "כוונו טמפרטורה 3 מעלות מתחת לחדר", "סגרו חלונות ודלתות בחדר"] },
+      { label: "נקו את הפילטרים", tips: ["פתחו את המכסה והוציאו את הפילטרים", "שטפו במים וסבון עדין", "ייבשו לגמרי לפני החזרה"] },
+      { label: "נזילת מים", tips: ["אתרו ונקו את צינור הניקוז הסתום", "קרח על הצינורות? → כנראה צריך מילוי גז", "בדקו שהיחידה מוטה לכיוון הניקוז"] },
+      { label: "רעשים מוזרים", tips: ["רעש → בדקו ברגים או פאנלים רופפים", "ריח עובש → נקו פילטרים וסלילים", "רעש מנוע → צריך טכנאי"] },
+    ],
+  },
+  {
+    id: "electrical", icon: "⚡", title: "חשמל / קצר", color: "#DC2626",
+    desc: "הפסקת חשמל או מפסק שנופל שוב ושוב",
+    steps: [
+      { label: "אתרו את האזור", tips: ["כל הבית או רק חדר אחד?", "מצאו את לוח החשמל — איזה מפסק נפל?", "בדקו אם גם לשכנים אין חשמל"] },
+      { label: "אפסו את המפסק", tips: ["כבו לגמרי ואז הדליקו מחדש", "נופל שוב מיד? → הזמינו חשמלאי", "כל מפסק שולט בדרך כלל על חדר אחד"] },
+      { label: "נתקו מכשירים", tips: ["נתקו את כל המכשירים באזור", "חברו חזרה אחד-אחד וחכו", "המכשיר שגורם לנפילה הוא התקול"] },
+      { label: "בדקו את השקעים", tips: ["סימני שריפה על שקע? → הפסיקו שימוש", "שקע עם כפתורים? לחצו RESET", "ריח שריפה? → אל תשתמשו — הזמינו מקצוען"] },
+      { label: "⚠️ בטיחות קודם", tips: ["לעולם אל תיגעו בחוטים חשופים", "לעולם אל תיגעו בלוח עם ידיים רטובות", "בספק? → הזמינו חשמלאי מוסמך"] },
+    ],
+  },
+  {
+    id: "plumbing", icon: "🚰", title: "אינסטלציה", color: "#7C3AED",
+    desc: "ניקוז סתום, נזילה או ברז מטפטף",
+    steps: [
+      { label: "ניקוז סתום", tips: ["שפכו מים רותחים לאט לניקוז", "סודה לשתייה + חומץ → כסו וחכו 30 דקות", "שטפו במים חמים, נסו פומפה", "עדיין סתום? → השתמשו בספירלה (₪20-40)"] },
+      { label: "ברז מטפטף", tips: ["סגרו את ברזי אספקת המים מתחת לכיור", "הסירו את הידית (בורג מתחת לכיסוי)", "החליפו את האטם או ה-O-ring", "הרכיבו ופתחו את המים לבדיקה"] },
+      { label: "אסלה דולפת", tips: ["הסירו את המכסה והורידו מים — צפו מה קורה", "השסתום לא אוטם? → החליפו (₪15-25)", "מים עולים מהצינור? → הורידו את המצוף"] },
+      { label: "נזילת צינור", tips: ["טפטוף בחיבור → הדקו בעדינות עם מפתח", "עטפו את החוטים בטפלון לאיטום", "נזילה גדולה → סגרו את הברז הראשי מיד!", "שימו מגבות ודליים והזמינו שרברב"] },
+    ],
+  },
+  {
+    id: "lock", icon: "🔑", title: "מנעול / דלת", color: "#475569",
+    desc: "מנעול תקוע, מפתח לא מסתובב או דלת שלא ננעלת",
+    steps: [
+      { label: "המפתח לא מסתובב / נכנס", tips: ["נסו מפתח גיבוי — אולי המפתח שלכם שחוק", "טפטפו מעט חומר סיכה (WD-40 / גרפיט) לחור המנעול", "אל תפעילו כוח — מפתח שנשבר בפנים רק מסבך"] },
+      { label: "הדלת לא ננעלת", tips: ["בדקו שהבריח יוצא ונכנס בחופשיות", "בדקו שהמנעול מיושר מול המשקוף", "ברגים רופפים בצילינדר? הדקו אותם"] },
+      { label: "ננעלתם בחוץ", tips: ["בדקו אם יש חלון או דלת אחורית פתוחים", "יש עותק מפתח אצל שכן / בן משפחה?", "אל תשברו את הדלת — מנעולן זול יותר"] },
+      { label: "⚠️ מתי להזמין מנעולן", tips: ["מפתח נשבר בתוך המנעול", "הצילינדר מסתובב חופשי בלי לנעול", "רוצים להחליף או לשדרג מנעול"] },
+    ],
+  },
+  {
+    id: "paint", icon: "🎨", title: "צביעה / קירות", color: "#EC4899",
+    desc: "כתמים, צבע מתקלף או עובש על הקיר",
+    steps: [
+      { label: "כתמים על הקיר", tips: ["כתם שומן → מים חמימים + סבון כלים עדין", "כתם עיפרון / טוש → מחק קסם (מלמין)", "אל תשפשפו חזק — עלול להוריד את הצבע"] },
+      { label: "צבע מתקלף", tips: ["גרדו את הצבע המתקלף עם מרית", "שייפו קלות ונקו את האבק", "מרחו שכבת יסוד (פריימר) לפני צבע חדש"] },
+      { label: "עובש (כתמים שחורים)", tips: ["אווררו — עובש נובע מלחות", "נקו עם מים + חומץ או אקונומיקה מדוללת (בזהירות)", "העובש חוזר? → יש בעיית רטיבות בקיר"] },
+      { label: "הכנה לצביעה", tips: ["מלאו סדקים וחורים במרק", "שייפו והחליקו את השטח", "הדביקו נייר דבק על מסגרות ושקעים"] },
+    ],
+  },
+  {
+    id: "carpentry", icon: "🔨", title: "רהיטים / נגרות", color: "#B45309",
+    desc: "דלת חורקת, ציר רופף או מגירה שנתקעת",
+    steps: [
+      { label: "ציר חורק", tips: ["טפטפו שמן / וזלין על הציר", "הזיזו את הדלת קדימה-אחורה לפיזור", "עדיין חורק? → פרקו את פין הציר ונקו"] },
+      { label: "ציר / ידית רופפים", tips: ["הדקו את הברגים עם מברג", "בורג מסתובב סרק? → הכניסו קיסם עץ + דבק", "החליפו לברגים ארוכים יותר אם צריך"] },
+      { label: "מגירה נתקעת", tips: ["רוקנו ובדקו שאין חפץ שנתקע מאחור", "שפשפו סבון יבש או נר על מסילות ההחלקה", "בדקו שהמסילות לא עקומות או רופפות"] },
+      { label: "רהיט מתנדנד", tips: ["מצאו את הרגל הקצרה — הוסיפו פד מתחת", "הדקו את כל חיבורי הברגים", "דבק עץ בחיבורים רופפים → הידקו והמתינו לייבוש"] },
+    ],
+  },
+  {
+    id: "washer", icon: "🧺", title: "מכונת כביסה", color: "#0EA5E9",
+    desc: "לא מתנקזת, דולפת או לא מתחילה",
+    steps: [
+      { label: "לא מתחילה", tips: ["ודאו שהדלת סגורה היטב (קליק)", "בדקו חיבור לחשמל ואת המפסק", "ודאו שברז המים פתוח"] },
+      { label: "לא מתנקזת / נשארים מים", tips: ["בדקו שצינור הניקוז לא מקופל או חסום", "נקו את פילטר המשאבה (בתחתית המכונה)", "כבו, המתינו 10 דקות ונסו תוכנית סחיטה"] },
+      { label: "דולפת מים", tips: ["בדקו את חיבורי צינור הכניסה/יציאה", "אל תעמיסו יתר על המידה", "אטם דלת פגום? → מקור נפוץ לנזילה"] },
+      { label: "רועשת / רועדת", tips: ["ודאו שהמכונה מאוזנת על הרצפה", "פזרו את הכביסה שווה בתוף", "מכונה חדשה? ודאו שהוסרו בורגי ההובלה"] },
+    ],
+  },
+];
 
-/* ============= MIND MAP VISUAL ============= */
-function MindMapView({ map }) {
-  const [openBranch, setOpenBranch] = useState(null);
-  const lang = getLang();
-  const isHe = lang === "he";
-  const cx = 400, cy = 300, R = 200;
+/* תמונות כותרת (אמיתיות) + תקצירים לכל נושא */
+const COVER = {
+  boiler:     { img: "https://loremflickr.com/460/280/water,heater" },
+  ac:         { img: "https://loremflickr.com/460/280/air,conditioner" },
+  electrical: { img: "https://loremflickr.com/460/280/electrician,wiring" },
+  plumbing:   { img: "https://loremflickr.com/460/280/plumber,pipe" },
+  lock:       { img: "https://loremflickr.com/460/280/door,lock" },
+  paint:      { img: "https://loremflickr.com/460/280/wall,paint" },
+  carpentry:  { img: "https://loremflickr.com/460/280/furniture,wood" },
+  washer:     { img: "https://loremflickr.com/460/280/washing,machine" },
+};
+const EXCERPT = {
+  he: {
+    boiler: "אין מים חמים בבית? לפני שמזמינים בעל מקצוע — כמה בדיקות פשוטות שאפשר לעשות לבד ולחסוך כסף.",
+    ac: "המזגן לא מקרר או לא נדלק? עקבו אחר המדריך — ברוב המקרים מדובר בפילטר סתום או הגדרה פשוטה.",
+    electrical: "נפל לכם החשמל או המפסק קופץ שוב ושוב? כך תאתרו את הבעיה בבטחה, צעד אחר צעד.",
+    plumbing: "ניקוז סתום, ברז מטפטף או נזילה? מדריך פרקטי לפתרונות ביתיים לפני שמזמינים שרברב.",
+    lock: "המנעול תקוע, המפתח לא מסתובב או ננעלתם בחוץ? כמה טריקים פשוטים לפני שקוראים למנעולן.",
+    paint: "כתמים, קילופים או עובש על הקיר? כך תנקו ותכינו את הקיר לצביעה — בעצמכם.",
+    carpentry: "דלת חורקת, ציר רופף או מגירה תקועה? תיקונים קטנים לבית שכל אחד יכול לעשות.",
+    washer: "מכונת הכביסה לא מתחילה, דולפת או לא מתנקזת? בדיקות פשוטות שיחסכו קריאת טכנאי.",
+  },
+  en: {
+    boiler: "No hot water at home? Before booking a pro — a few simple checks you can do yourself and save money.",
+    ac: "AC not cooling or won't turn on? Follow the guide — usually it's a clogged filter or a simple setting.",
+    electrical: "Lost power or a breaker keeps tripping? Here's how to safely find the problem, step by step.",
+    plumbing: "Clogged drain, dripping faucet or a leak? A practical guide to home fixes before calling a plumber.",
+    lock: "Stuck lock, key won't turn or locked out? A few simple tricks before you call a locksmith.",
+    paint: "Stains, peeling or mold on the wall? How to clean and prep the wall for painting — yourself.",
+    carpentry: "Squeaky door, loose hinge or a stuck drawer? Small home fixes anyone can do.",
+    washer: "Washing machine won't start, leaks or won't drain? Simple checks that save a technician visit.",
+  },
+};
 
+/* ============= STEP GUIDE (accordion) ============= */
+function StepGuide({ guide, isHe, font, titleFont, navigate }) {
+  const [open, setOpen] = useState(0);
   return (
-    <div style={{ position: "relative", width: "100%", maxWidth: 860, margin: "0 auto", minHeight: 620, padding: "30px 10px" }}>
-      {/* Center node */}
-      <div style={{
-        position: "absolute", left: "50%", top: 240, transform: "translate(-50%,-50%)",
-        width: 120, height: 120, borderRadius: "50%",
-        background: `linear-gradient(135deg,${map.centerBg},#FFF)`,
-        border: `3px solid ${map.centerColor}`,
-        display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-        boxShadow: `0 8px 32px ${map.centerColor}30`, zIndex: 10,
-      }}>
-        <span style={{ fontSize: 36 }}>{map.icon}</span>
-        <span style={{ fontSize: 11, fontWeight: 700, color: map.centerColor, textAlign: "center", lineHeight: 1.2, padding: "0 8px", marginTop: 4 }}>{map.title}</span>
+    <div style={{ maxWidth: 720, margin: "0 auto", padding: "26px 20px 60px", animation: "fadeUp .3s" }}>
+      {/* header */}
+      <div style={{ display: "flex", alignItems: "center", gap: 14, marginBottom: 22 }}>
+        <div style={{ width: 60, height: 60, borderRadius: 18, background: `${guide.color}15`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 30, flexShrink: 0 }}>{guide.icon}</div>
+        <div>
+          <h1 style={{ fontFamily: titleFont, fontSize: 23, fontWeight: 800, color: "#1A2B4A", marginBottom: 2 }}>{guide.title}</h1>
+          <p style={{ fontSize: 13.5, color: "#7C8DB5" }}>{isHe ? "עקבו אחר השלבים לפי הסדר" : "Follow the steps in order"}</p>
+        </div>
       </div>
 
-      {/* Branches */}
-      {map.branches.map((branch, i) => {
-        const angle = (i / map.branches.length) * Math.PI * 2 - Math.PI / 2;
-        const bx = cx + R * Math.cos(angle);
-        const by = cy + R * Math.sin(angle);
-        const isOpen = openBranch === i;
-
-        return (
-          <div key={i}>
-            <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: 600, pointerEvents: "none", zIndex: 1 }}>
-              <line x1="50%" y1={240} x2={`${(bx / 800) * 100}%`} y2={by} stroke={branch.color} strokeWidth="2" strokeDasharray="6,4" opacity={0.4} />
-            </svg>
-
-            <div
-              onClick={() => setOpenBranch(isOpen ? null : i)}
-              style={{
-                position: "absolute",
-                left: `${(bx / 800) * 100}%`, top: by,
-                transform: "translate(-50%,-50%)",
-                background: isOpen ? branch.color : branch.bg,
-                color: isOpen ? "#FFF" : branch.color,
-                border: `2px solid ${branch.color}`,
-                borderRadius: 16, padding: "12px 18px",
-                fontSize: 13, fontWeight: 600,
-                cursor: "pointer", zIndex: 5,
-                boxShadow: isOpen ? `0 6px 24px ${branch.color}40` : `0 2px 12px ${branch.color}20`,
-                transition: "all 0.3s",
-                maxWidth: 180, textAlign: "center",
-                whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis",
-              }}
-            >
-              {branch.label}
+      {/* steps */}
+      <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
+        {guide.steps.map((s, i) => {
+          const isOpen = open === i;
+          return (
+            <div key={i} style={{ background: "#FFF", border: `1.5px solid ${isOpen ? guide.color : "#E8ECF4"}`, borderRadius: 16, overflow: "hidden", boxShadow: isOpen ? `0 6px 22px ${guide.color}1F` : "0 2px 10px rgba(0,0,0,.03)", transition: "all .2s" }}>
+              <button onClick={() => setOpen(isOpen ? -1 : i)}
+                style={{ width: "100%", display: "flex", alignItems: "center", gap: 14, padding: "15px 18px", background: "none", border: "none", cursor: "pointer", fontFamily: font, textAlign: isHe ? "right" : "left" }}>
+                <span style={{ width: 30, height: 30, borderRadius: "50%", background: guide.color, color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 14, flexShrink: 0 }}>{i + 1}</span>
+                <span style={{ flex: 1, fontSize: 15, fontWeight: 700, color: "#1A2B4A" }}>{s.label}</span>
+                <span style={{ color: "#94A3B8", display: "flex" }}><IconChevron open={isOpen} /></span>
+              </button>
+              {isOpen && (
+                <div style={{ padding: "0 18px 16px 18px", display: "flex", flexDirection: "column", gap: 8, animation: "fadeUp .25s" }}>
+                  {s.tips.map((tip, ti) => (
+                    <div key={ti} style={{ display: "flex", gap: 10, alignItems: "flex-start", background: "#F8FAFF", borderRadius: 10, padding: "10px 14px" }}>
+                      <span style={{ width: 6, height: 6, borderRadius: "50%", background: guide.color, marginTop: 8, flexShrink: 0 }} />
+                      <span style={{ fontSize: 14, color: "#334155", lineHeight: 1.6 }}>{tip}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
+          );
+        })}
+      </div>
 
-            {isOpen && (
-              <div style={{
-                position: "absolute",
-                left: `${(bx / 800) * 100}%`, top: by + 36,
-                transform: "translateX(-50%)",
-                background: "#FFF", border: `2px solid ${branch.color}`,
-                borderRadius: 18, padding: "16px 18px",
-                zIndex: 20, minWidth: 260, maxWidth: 340,
-                boxShadow: `0 12px 40px ${branch.color}25`,
-                animation: "fadeUp .3s",
-              }}>
-                {branch.children.map((child, ci) => (
-                  <div key={ci} style={{
-                    fontSize: 13, color: "#1A2B4A", lineHeight: 1.6,
-                    padding: "6px 0",
-                    borderBottom: ci < branch.children.length - 1 ? "1px solid #F0F4FF" : "none",
-                  }}>
-                    {child}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        );
-      })}
+      {/* CTA */}
+      <div style={{ marginTop: 24, background: "linear-gradient(135deg,#EEF2FF,#F8FAFF)", border: "1px solid #C7D2FE", borderRadius: 18, padding: "22px 24px", textAlign: "center" }}>
+        <p style={{ fontSize: 15.5, fontWeight: 800, color: "#1A2B4A", marginBottom: 3, fontFamily: titleFont }}>{isHe ? "עדיין תקוע?" : "Still stuck?"}</p>
+        <p style={{ fontSize: 13.5, color: "#7C8DB5", marginBottom: 16 }}>{isHe ? "בעל מקצוע מוסמך יכול לעזור מיד" : "A licensed professional can help right away"}</p>
+        <button onClick={() => navigate("/client/search")}
+          style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "13px 30px", borderRadius: 14, border: "none", background: "linear-gradient(135deg,#4F6AFF,#3B4FE0)", color: "#FFF", fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: font, boxShadow: "0 6px 18px rgba(79,106,255,.3)" }}>
+          <IconWrench /> {isHe ? "הזמן בעל מקצוע" : "Book a professional"}
+        </button>
+      </div>
     </div>
   );
 }
@@ -240,18 +288,22 @@ function MindMapView({ map }) {
 /* ============= MAIN ============= */
 export default function MindMap() {
   const navigate = useNavigate();
-  var lang = getLang(); var dir = getDir();
+  const lang = getLang();
+  const dir = getDir();
   const isHe = lang === "he";
-  const [selectedMap, setSelectedMap] = useState(null);
-  var MAPS = getMaps();
-  const map = MAPS.find((m) => m.id === selectedMap);
+  const [selectedId, setSelectedId] = useState(null);
+
+  const GUIDES = isHe ? GUIDES_HE : GUIDES_EN;
+  const guide = GUIDES.find((g) => g.id === selectedId);
+  const font = isHe ? "'Heebo',sans-serif" : "'DM Sans',sans-serif";
+  const titleFont = "'Outfit',sans-serif";
 
   return (
-    <div style={{ fontFamily: "'DM Sans','Inter',sans-serif", background: "linear-gradient(135deg,#F0F4FF 0%,#F8FAFF 50%,#FFF 100%)", minHeight: "100vh", direction: dir }}>
+    <div style={{ fontFamily: font, background: "linear-gradient(135deg,#F0F4FF 0%,#F8FAFF 50%,#FFF 100%)", minHeight: "100vh", direction: dir }}>
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
-        @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-        .mmCard:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.08)!important}
+        @keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+        .helpCard:hover{transform:translateY(-4px);box-shadow:0 12px 32px rgba(0,0,0,.08)!important}
         *{box-sizing:border-box;margin:0}
       `}</style>
 
@@ -260,47 +312,60 @@ export default function MindMap() {
         <div style={{ maxWidth: 900, margin: "0 auto", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "14px 24px" }}>
           <div style={{ textAlign: "center", flex: 1 }}>
             <span style={{ fontFamily: isHe ? "'Heebo','Outfit'" : "'Outfit'", fontSize: 20, fontWeight: 700, color: "#1A2B4A", display: "block" }}>
-              {selectedMap ? map.title : (isHe ? "\u05DE\u05E4\u05EA \u05D7\u05E9\u05D9\u05D1\u05D4" : "Mind Map")}
+              {guide ? guide.title : (isHe ? "מרכז עזרה עצמית" : "Self-Help Center")}
             </span>
             <span style={{ fontSize: 12, color: "#7C8DB5" }}>
-              {selectedMap ? (isHe ? "\u05DC\u05D7\u05E6\u05D5 \u05E2\u05DC \u05E9\u05DC\u05D1 \u05DC\u05E4\u05E8\u05D8\u05D9\u05DD" : "Tap any step to see details") : (isHe ? "\u05DE\u05D3\u05E8\u05D9\u05DB\u05D9 \u05E4\u05EA\u05E8\u05D5\u05DF \u05EA\u05E7\u05DC\u05D5\u05EA" : "Troubleshooting Guides")}
+              {guide ? (isHe ? "לחצו על שלב לפרטים" : "Tap a step for details") : (isHe ? "פתרו תקלות נפוצות בעצמכם" : "Fix common problems yourself")}
             </span>
           </div>
-          <button onClick={() => selectedMap ? setSelectedMap(null) : navigate("/client/dashboard")} style={{
-            width: 44, height: 44, borderRadius: 14, background: "#F0F4FF", border: "1px solid #E2E8F0",
-            display: "flex", alignItems: "center", justifyContent: "center", color: "#5A6B8A", cursor: "pointer",
-          }}><IconBack /></button>
+          <button onClick={() => (selectedId ? setSelectedId(null) : navigate("/client/dashboard"))}
+            style={{ width: 44, height: 44, borderRadius: 14, background: "#F0F4FF", border: "1px solid #E2E8F0", display: "flex", alignItems: "center", justifyContent: "center", color: "#5A6B8A", cursor: "pointer" }}>
+            <IconBack />
+          </button>
         </div>
       </nav>
 
-      {/* MAP VIEW */}
-      {selectedMap && map ? (
-        <MindMapView map={map} />
+      {guide ? (
+        <StepGuide guide={guide} isHe={isHe} font={font} titleFont={titleFont} navigate={navigate} />
       ) : (
-        <div style={{ maxWidth: 900, margin: "0 auto", padding: "40px 24px" }}>
-          <div style={{ textAlign: "center", marginBottom: 36 }}>
-            <span style={{ fontSize: 56 }}>{"\uD83D\uDDFA\uFE0F"}</span>
-            <h1 style={{ fontFamily: isHe ? "'Heebo','Outfit'" : "'Outfit'", fontSize: 28, fontWeight: 800, color: "#1A2B4A", marginBottom: 6 }}>{isHe ? "\u05DE\u05D3\u05E8\u05D9\u05DB\u05D9 \u05DE\u05E4\u05EA \u05D7\u05E9\u05D9\u05D1\u05D4" : "Mind Map Guides"}</h1>
-            <p style={{ fontSize: 15, color: "#7C8DB5" }}>{isHe ? "\u05E4\u05EA\u05E8\u05D5\u05DF \u05EA\u05E7\u05DC\u05D5\u05EA \u05D5\u05D9\u05D6\u05D5\u05D0\u05DC\u05D9 \u2014 \u05DC\u05D7\u05E6\u05D5 \u05E2\u05DC \u05E2\u05E0\u05E3 \u05DC\u05E8\u05D0\u05D5\u05EA \u05E9\u05DC\u05D1\u05D9\u05DD" : "Visual troubleshooting \u2014 tap branches to see step-by-step fixes"}</p>
+        <div style={{ maxWidth: 1120, margin: "0 auto", padding: "44px 24px 70px" }}>
+          {/* כותרת עם קו תחתון */}
+          <div style={{ textAlign: "center", marginBottom: 40 }}>
+            <h1 style={{ fontFamily: isHe ? "'Heebo','Outfit'" : titleFont, fontSize: 34, fontWeight: 800, color: "#1A2B4A", marginBottom: 8 }}>
+              {isHe ? "תקלות נפוצות" : "Common Problems"}
+            </h1>
+            <svg width="150" height="14" viewBox="0 0 150 14" style={{ display: "block", margin: "0 auto 10px" }}>
+              <path d="M3 8 Q75 16 147 6" stroke="#2563EB" strokeWidth="3.5" fill="none" strokeLinecap="round" />
+            </svg>
+            <p style={{ fontSize: 15.5, color: "#7C8DB5" }}>{isHe ? "מדריכים לפתרון עצמי — נסו לתקן לבד לפני שמזמינים בעל מקצוע" : "Self-help guides — try fixing it yourself before booking a pro"}</p>
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(220px,1fr))", gap: 20 }}>
-            {MAPS.map((m) => (
-              <div key={m.id} className="mmCard" onClick={() => setSelectedMap(m.id)}
-                style={{
-                  background: "#FFF", borderRadius: 22, padding: "28px 20px", textAlign: "center",
-                  border: "1px solid #E8ECF4", cursor: "pointer",
-                  boxShadow: "0 4px 20px rgba(0,0,0,.04)", transition: "all 0.3s",
-                }}>
-                <div style={{
-                  width: 64, height: 64, borderRadius: 20,
-                  background: `${m.centerColor}15`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  margin: "0 auto 16px", fontSize: 28,
-                }}>{m.icon}</div>
-                <div style={{ fontFamily: isHe ? "'Heebo','Outfit'" : "'Outfit'", fontSize: 16, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>{m.title}</div>
-                <div style={{ fontSize: 12, color: "#94A3B8", marginBottom: 14 }}>{m.branches.length} {isHe ? "\u05E9\u05DC\u05D1\u05D9\u05DD" : "steps"}</div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: m.centerColor }}>{isHe ? "\u05E4\u05EA\u05D7\u05D5 \u05DE\u05E4\u05D4 \u2190" : "Open Map \u2192"}</div>
+          {/* כרטיסי מאמרים */}
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(250px,1fr))", gap: 24 }}>
+            {GUIDES.map((g) => (
+              <div key={g.id} className="helpCard" onClick={() => setSelectedId(g.id)}
+                style={{ background: "#FFF", borderRadius: 18, overflow: "hidden", border: "1px solid #EAEEF5", cursor: "pointer", boxShadow: "0 4px 18px rgba(15,23,42,.05)", transition: "all .3s", display: "flex", flexDirection: "column" }}>
+                {/* תמונת כותרת (עם fallback לגרדיאנט+אייקון אם התמונה לא נטענת) */}
+                <div style={{ position: "relative", height: 172, background: `linear-gradient(135deg,${g.color},${g.color}bb)`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                  <span style={{ position: "absolute", fontSize: 52 }}>{g.icon}</span>
+                  <img src={COVER[g.id] && COVER[g.id].img} alt={g.title} loading="lazy"
+                    onError={(e) => { e.currentTarget.style.display = "none"; }}
+                    style={{ position: "relative", width: "100%", height: "100%", objectFit: "cover" }} />
+                </div>
+                {/* גוף הכרטיס */}
+                <div style={{ padding: "18px 20px 20px", display: "flex", flexDirection: "column", flex: 1 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+                    <span style={{ fontSize: 20 }}>{g.icon}</span>
+                    <h3 style={{ fontFamily: isHe ? "'Heebo','Outfit'" : titleFont, fontSize: 17, fontWeight: 800, color: "#1A2B4A", lineHeight: 1.3 }}>{g.title}</h3>
+                  </div>
+                  <p style={{ fontSize: 13.5, color: "#64748B", lineHeight: 1.65, marginBottom: 16, flex: 1 }}>
+                    {(EXCERPT[isHe ? "he" : "en"] || {})[g.id] || g.desc}
+                  </p>
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid #F1F5F9", paddingTop: 12 }}>
+                    <span style={{ fontSize: 12, color: "#94A3B8" }}>{g.steps.length} {isHe ? "שלבים" : "steps"}</span>
+                    <span style={{ fontSize: 14, fontWeight: 700, color: "#2563EB" }}>{isHe ? "קרא עוד ←" : "Read more →"}</span>
+                  </div>
+                </div>
               </div>
             ))}
           </div>

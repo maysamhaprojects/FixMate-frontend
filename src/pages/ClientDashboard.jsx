@@ -51,11 +51,17 @@ export default function ClientDashboard() {
   var MOCK_ORDERS = MOCK_ORDERS_DATA[lang] || MOCK_ORDERS_DATA.en;
   const [mounted, setMounted] = useState(false);
   const [userName] = useState(localStorage.getItem("fullName") || (lang === "he" ? "אורח" : "Guest"));
+  const [avatarPic, setAvatarPic] = useState(localStorage.getItem("profilePicture") || "");
+  const [userEmail, setUserEmail] = useState(localStorage.getItem("email") || "");
   const [orders, setOrders] = useState([]);
   const [showNotif, setShowNotif] = useState(false);
   const [showProfile, setShowProfile] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [ratedIds, setRatedIds] = useState([]);
+  const [myComplaints, setMyComplaints] = useState([]);
+  const [showAllOrders, setShowAllOrders] = useState(false);
+  const [showAllComplaints, setShowAllComplaints] = useState(false);
+  const PREVIEW_COUNT = 2; // כמה להציג לפני "הצג הכל"
 
   const [editOrder, setEditOrder] = useState(null);
   const [trackOrder, setTrackOrder] = useState(null);
@@ -73,6 +79,13 @@ export default function ClientDashboard() {
   const [compDesc, setCompDesc] = useState("");
   const [compOrderId, setCompOrderId] = useState("");
   const [compSaving, setCompSaving] = useState(false);
+
+  /* הודעת toast פנימית (במקום alert של הדפדפן) */
+  const [toast, setToast] = useState(null);
+  const showToast = (msg, type = "success") => {
+    setToast({ msg, type });
+    setTimeout(() => setToast(null), 3200);
+  };
 
   useEffect(() => { const tm = setTimeout(() => setMounted(true), 50); return () => clearTimeout(tm); }, []);
 
@@ -105,6 +118,7 @@ export default function ClientDashboard() {
             proName,
             proRole: b.serviceType || "",
             proAvatar: null,
+            proPic: (b.pro && b.pro.profilePicture) || "",
             rating: null,
             status: (b.status || "PENDING").toLowerCase(),
             date: sched.slice(0, 10),
@@ -160,6 +174,34 @@ export default function ClientDashboard() {
       .catch(() => {});
   }, [refreshTick]);
 
+  /* תמונת פרופיל של המשתמש המחובר */
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8080/api/user/me", {
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((u) => {
+        if (u) {
+          setAvatarPic(u.profilePicture || "");
+          localStorage.setItem("profilePicture", u.profilePicture || "");
+          if (u.email) { setUserEmail(u.email); localStorage.setItem("email", u.email); }
+        }
+      })
+      .catch(() => {});
+  }, [refreshTick]);
+
+  /* התלונות של הלקוח + הסטטוס שלהן (מתעדכן אוטומטית) */
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    fetch("http://localhost:8080/api/complaints/mine", {
+      headers: { "Content-Type": "application/json", "Authorization": "Bearer " + token },
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((list) => { if (Array.isArray(list)) setMyComplaints(list); })
+      .catch(() => {});
+  }, [refreshTick]);
+
   const activeOrders = orders;
 
   const STATUS_MAP = {
@@ -199,10 +241,15 @@ export default function ClientDashboard() {
       .finally(() => setEditSaving(false));
   };
 
-  const openComplaint = () => { setCompSubject(""); setCompDesc(""); setCompOrderId(""); setShowComplaint(true); };
+  const openComplaint = (order) => {
+    setCompSubject("");
+    setCompDesc("");
+    setCompOrderId(order && order.bookingId ? String(order.bookingId) : "");
+    setShowComplaint(true);
+  };
   const submitComplaint = () => {
     if (!compSubject.trim() || !compDesc.trim()) {
-      alert(isHe ? "יש למלא נושא ותיאור" : "Please fill subject and description");
+      showToast(isHe ? "יש למלא נושא ותיאור" : "Please fill subject and description", "error");
       return;
     }
     const token = localStorage.getItem("token");
@@ -217,12 +264,12 @@ export default function ClientDashboard() {
       .then((r) => {
         if (r.ok) {
           setShowComplaint(false);
-          alert(isHe ? "התלונה נשלחה בהצלחה. הצוות יטפל בה." : "Complaint submitted. Our team will handle it.");
+          showToast(isHe ? "התלונה נשלחה בהצלחה. הצוות יטפל בה." : "Complaint submitted. Our team will handle it.", "success");
         } else {
-          r.text().then((msg) => alert((isHe ? "שליחה נכשלה: " : "Submit failed: ") + (msg || ("קוד " + r.status))));
+          r.text().then((msg) => showToast((isHe ? "שליחה נכשלה: " : "Submit failed: ") + (msg || ("קוד " + r.status)), "error"));
         }
       })
-      .catch((e) => alert((isHe ? "שגיאת רשת: " : "Network error: ") + e.message))
+      .catch((e) => showToast((isHe ? "שגיאת רשת: " : "Network error: ") + e.message, "error"))
       .finally(() => setCompSaving(false));
   };
 
@@ -331,18 +378,20 @@ export default function ClientDashboard() {
 
             {/* Profile */}
             <div className="cd-profile-wrap">
-              <button className="cd-nav-icon-btn" title="Profile" onClick={() => { setShowProfile(!showProfile); setShowNotif(false); }}>
-                <IconUser />
+              <button className="cd-nav-icon-btn" title="Profile" onClick={() => { setShowProfile(!showProfile); setShowNotif(false); }} style={avatarPic ? { overflow: "hidden", padding: 0 } : undefined}>
+                {avatarPic ? <img src={avatarPic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : <IconUser />}
               </button>
               {showProfile && (
                 <>
                   <div className="cd-notif-backdrop" onClick={() => setShowProfile(false)} />
                   <div className="cd-profile-dropdown">
                     <div className="cd-profile-header">
-                      <div className="cd-profile-avatar">M</div>
+                      <div className="cd-profile-avatar" style={{ overflow: "hidden", padding: 0 }}>
+                        {avatarPic ? <img src={avatarPic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (userName.charAt(0) || "U").toUpperCase()}
+                      </div>
                       <div className="cd-profile-info">
                         <h4 className="cd-profile-name">{userName}</h4>
-                        <p className="cd-profile-email">michael@email.com</p>
+                        <p className="cd-profile-email">{userEmail || (isHe ? "טוען..." : "Loading...")}</p>
                       </div>
                     </div>
                     <div className="cd-profile-menu">
@@ -427,12 +476,12 @@ export default function ClientDashboard() {
           <div className="cd-action-card cd-action-card--map" onClick={() => navigate("/client/mindmap")}>
             <div className="cd-action-icon-wrap cd-action-icon--purple"><IconMindMap /></div>
             <h3 className="cd-action-title">
-              {lang === "he" ? "מפת רעיונות" : "Idea Map"}
+              {lang === "he" ? "מרכז עזרה עצמית" : "Self-Help Center"}
             </h3>
             <p className="cd-action-desc">
               {lang === "he"
-                ? "כל הבעיות והטיפולים שלך במפה ויזואלית"
-                : "All your issues & fixes in a visual map"}
+                ? "מדריכי פתרון תקלות — נסה לתקן בעצמך"
+                : "Troubleshooting guides — try fixing it yourself"}
             </p>
             <div className="cd-action-arrow"><IconArrowRight /></div>
           </div>
@@ -448,12 +497,12 @@ export default function ClientDashboard() {
             <div className="cd-orders-empty"><p>{t("cd_no_orders")}</p><p>{t("cd_book_to_start")}</p></div>
           ) : (
             <div className="cd-orders-list">
-              {activeOrders.map((order) => {
+              {(showAllOrders ? activeOrders : activeOrders.slice(0, PREVIEW_COUNT)).map((order) => {
                 const status = STATUS_MAP[order.status] || STATUS_MAP.pending;
                 return (
                   <div className="cd-order-card" key={order.id}>
                     <div className="cd-order-top">
-                      <div className="cd-order-avatar">{order.proName.charAt(0)}</div>
+                      <div className="cd-order-avatar" style={order.proPic ? { overflow: "hidden", padding: 0 } : undefined}>{order.proPic ? <img src={order.proPic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : order.proName.charAt(0)}</div>
                       <div className="cd-order-info">
                         <h4 className="cd-order-name">{order.proName}</h4>
                         <p className="cd-order-role">{order.proRole}</p>
@@ -494,13 +543,67 @@ export default function ClientDashboard() {
                           <button className="cd-order-btn cd-order-btn--track" onClick={() => navigate(`/client/rate?bookingId=${order.bookingId}&pro=${encodeURIComponent(order.proName)}&service=${encodeURIComponent(order.proRole)}`)} style={{ display: "inline-flex", alignItems: "center", gap: 6, justifyContent: "center" }}><svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" /></svg> {t("cd_rate")}</button>
                         )
                       )}
+                      {/* דיווח על בעיה — פותח תלונה מקושרת להזמנה */}
+                      <button onClick={() => openComplaint(order)}
+                        style={{ display: "inline-flex", alignItems: "center", gap: 4, justifyContent: "center", flex: "0 0 auto", width: "auto", padding: "5px 10px", fontSize: 12, fontWeight: 600, fontFamily: "inherit", background: "#FFF", color: "#EF4444", border: "1px solid #FECACA", borderRadius: 8, cursor: "pointer" }}>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                        {isHe ? "דווח על בעיה" : "Report a problem"}
+                      </button>
                     </div>
                   </div>
                 );
               })}
+              {activeOrders.length > PREVIEW_COUNT && (
+                <button onClick={() => setShowAllOrders(v => !v)}
+                  style={{ display: "block", margin: "4px auto 0", padding: "9px 20px", borderRadius: 22, border: "1.5px solid #E2E8F0", background: "#FFF", color: "#2563EB", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}>
+                  {showAllOrders ? (isHe ? "הצג פחות" : "Show less") : (isHe ? `הצג הכל (${activeOrders.length})` : `Show all (${activeOrders.length})`)}
+                </button>
+              )}
             </div>
           )}
         </section>
+        {/* ═══ MY COMPLAINTS ═══ */}
+        {myComplaints.length > 0 && (
+          <section className="cd-orders-section" style={{ marginTop: 28 }}>
+            <div className="cd-orders-header">
+              <h2 className="cd-orders-title">
+                {isHe ? "התלונות שלי" : "My Complaints"} <span className="cd-orders-count">{myComplaints.length}</span>
+              </h2>
+            </div>
+            <div style={{ display: "grid", gap: 14 }}>
+              {(showAllComplaints ? myComplaints : myComplaints.slice(0, PREVIEW_COUNT)).map((c) => {
+                const resolved = c.status === "RESOLVED";
+                return (
+                  <div key={c.id} style={{ background: "#FFF", borderRadius: 16, border: "1px solid #EAEEF5", padding: "16px 20px", boxShadow: "0 2px 14px rgba(15,23,42,.04)" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 8 }}>
+                      <h4 style={{ fontSize: 15, fontWeight: 700, color: "#1A2B4A" }}>{c.subject}</h4>
+                      <span style={{ fontSize: 12, fontWeight: 700, padding: "4px 12px", borderRadius: 20,
+                        background: resolved ? "rgba(16,185,129,.12)" : "rgba(245,158,11,.12)", color: resolved ? "#059669" : "#B45309" }}>
+                        {resolved ? (isHe ? "טופל ✓" : "Resolved ✓") : (isHe ? "פתוח" : "Open")}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: 13, color: "#64748B", lineHeight: 1.5, marginBottom: 6 }}>{c.description}</p>
+                    {c.bookingId && <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 6 }}>ORD-{c.bookingId} · {c.bookingService || ""}</p>}
+                    {c.adminResponse && (
+                      <div style={{ marginTop: 8, background: "#F0FDF4", border: "1px solid #BBF7D0", borderRadius: 10, padding: "10px 14px" }}>
+                        <p style={{ fontSize: 12, fontWeight: 700, color: "#059669", marginBottom: 3 }}>{isHe ? "תגובת הצוות" : "Team response"}</p>
+                        <p style={{ fontSize: 13, color: "#166534", lineHeight: 1.5 }}>{c.adminResponse}</p>
+                      </div>
+                    )}
+                    <p style={{ fontSize: 11, color: "#94A3B8", marginTop: 8 }}>{(c.createdAt || "").slice(0, 10)}</p>
+                  </div>
+                );
+              })}
+              {myComplaints.length > PREVIEW_COUNT && (
+                <button onClick={() => setShowAllComplaints(v => !v)}
+                  style={{ display: "block", margin: "0 auto", padding: "9px 20px", borderRadius: 22, border: "1.5px solid #E2E8F0", background: "#FFF", color: "#2563EB", fontSize: 13, fontWeight: 600, fontFamily: "inherit", cursor: "pointer" }}>
+                  {showAllComplaints ? (isHe ? "הצג פחות" : "Show less") : (isHe ? `הצג הכל (${myComplaints.length})` : `Show all (${myComplaints.length})`)}
+                </button>
+              )}
+            </div>
+          </section>
+        )}
+
       </main>
 
       {/* ═══ MODAL: Edit ═══ */}
@@ -632,6 +735,17 @@ export default function ClientDashboard() {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ═══ TOAST — הודעה פנימית ═══ */}
+      {toast && (
+        <div style={{ position: "fixed", bottom: 24, insetInlineStart: "50%", transform: "translateX(-50%)", zIndex: 2000, direction: dir,
+          display: "flex", alignItems: "center", gap: 10, padding: "13px 20px", borderRadius: 14,
+          background: toast.type === "error" ? "#FEF2F2" : "#ECFDF5", border: "1px solid " + (toast.type === "error" ? "#FECACA" : "#A7F3D0"),
+          color: toast.type === "error" ? "#B91C1C" : "#065F46", boxShadow: "0 8px 30px rgba(15,23,42,.14)", fontSize: 14, fontWeight: 600, maxWidth: "90vw", animation: "cdFadeIn .2s ease" }}>
+          <span style={{ fontSize: 16 }}>{toast.type === "error" ? "⚠️" : "✓"}</span>
+          <span>{toast.msg}</span>
         </div>
       )}
     </div>

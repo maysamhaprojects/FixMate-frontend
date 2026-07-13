@@ -242,6 +242,7 @@ export default function BookaPro() {
             city: p.location || "—",
             price: p.hourlyRate != null ? String(p.hourlyRate) : "—",
             avatar,
+            profilePicture: u.profilePicture || "",
             expYears: p.yearsExperience != null ? p.yearsExperience : "—",
             phone: u.phone || "",
             available: "confirmed",
@@ -600,7 +601,7 @@ export default function BookaPro() {
                       <div style={{ padding: "20px 22px" }}>
                         {/* Top: avatar + name + verified */}
                         <div style={{ display: "flex", gap: 14, alignItems: "center", marginBottom: 14 }}>
-                          <div style={{ width: 56, height: 56, borderRadius: 16, background: "linear-gradient(135deg,#3B82F6,#2563EB)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 18, flexShrink: 0, fontFamily: "'Outfit'" }}>{p.avatar}</div>
+                          <div style={{ width: 56, height: 56, borderRadius: 16, overflow: "hidden", background: "linear-gradient(135deg,#3B82F6,#2563EB)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 800, fontSize: 18, flexShrink: 0, fontFamily: "'Outfit'" }}>{p.profilePicture ? <img src={p.profilePicture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : p.avatar}</div>
                           <div style={{ flex: 1, minWidth: 0 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                               <span style={{ fontSize: 16.5, fontWeight: 800, color: "#1A2B4A", fontFamily: "'Outfit'", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{p.name}</span>

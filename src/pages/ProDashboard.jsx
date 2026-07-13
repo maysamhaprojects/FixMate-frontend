@@ -146,6 +146,7 @@ export default function ProDashboard() {
     specialty: "",
     rating: null,
     avatar: (localStorage.getItem("fullName") || "?").charAt(0).toUpperCase(),
+    profilePicture: localStorage.getItem("profilePicture") || "",
   });
 
   /* סטטיסטיקות אמיתיות (מאותחל ל-0 עבור בעל מקצוע חדש) */
@@ -188,7 +189,9 @@ export default function ProDashboard() {
           specialty: p.specialty || "",
           rating: p.averageRating != null ? p.averageRating : null,
           avatar: (name || "?").charAt(0).toUpperCase(),
+          profilePicture: u.profilePicture || "",
         });
+        localStorage.setItem("profilePicture", u.profilePicture || "");
       })
       .catch(() => { /* אם נכשל — נשארים עם השם מ-localStorage */ });
   }, []);
@@ -537,8 +540,8 @@ export default function ProDashboard() {
             </div>
 
             {/* אווטאר */}
-            <div style={{ width: 40, height: 40, borderRadius: 12, background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16 }}>
-              {me.avatar || PRO_INFO.avatar}
+            <div style={{ width: 40, height: 40, borderRadius: 12, overflow: "hidden", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 16 }}>
+              {me.profilePicture ? <img src={me.profilePicture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (me.avatar || PRO_INFO.avatar)}
             </div>
 
             {/* יציאה */}

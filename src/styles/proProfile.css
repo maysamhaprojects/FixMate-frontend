@@ -1,0 +1,278 @@
+/* ============================================================
+ *  FixMate — עיצוב מסך הפרופיל של בעל המקצוע
+ *  חולץ מ-ProProfile.jsx (ה-<style> הפנימי + inline styles).
+ *  התחילית pp- מונעת התנגשות עם pro.css.
+ *  שימוש:  import "../styles/proProfile.css";
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800&display=swap');
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(12px); }        to { opacity: 1; transform: translateY(0); } }
+@keyframes toast  { from { opacity: 0; transform: translate(-50%, -10px); }  to { opacity: 1; transform: translate(-50%, 0); } }
+@keyframes pop    { from { transform: scale(.92); opacity: 0; }              to { transform: scale(1); opacity: 1; } }
+
+.hb:hover:not(:disabled) { filter: brightness(1.05); transform: translateY(-1px); }
+
+/* ── עמוד ── */
+.pp-page { background: #F5F7FB; min-height: 100vh; transition: opacity .35s; }
+.pp-page * { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ════════ NAV ════════ */
+.pp-nav {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(255,255,255,.96);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid #E8ECF4;
+}
+.pp-nav-inner {
+  max-width: 960px; margin: 0 auto;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 28px;
+}
+.pp-back-btn {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: #F0F4FF; border: 1px solid #E2E8F0;
+  display: flex; align-items: center; justify-content: center;
+  color: #5A6B8A; cursor: pointer;
+}
+.pp-nav-title { font-family: 'Outfit', sans-serif; font-size: 19px; font-weight: 700; color: #1A2B4A; }
+.pp-btn-row { display: flex; gap: 8px; }
+.pp-btn-edit, .pp-btn-save {
+  display: flex; align-items: center; gap: 6px;
+  padding: 10px 20px; border-radius: 12px; border: none;
+  color: #FFF; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+.pp-btn-edit { background: #2563EB; box-shadow: 0 4px 14px rgba(37,99,235,.2); }
+.pp-btn-save { background: #059669; box-shadow: 0 4px 14px rgba(5,150,105,.2); }
+.pp-btn-cancel {
+  padding: 10px 18px; border-radius: 12px;
+  border: 2px solid #E2E8F0; background: #FFF;
+  color: #64748B; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ── טוסט ── */
+.pp-toast {
+  position: fixed; top: 76px; left: 50%; transform: translateX(-50%);
+  background: #059669; color: #FFF;
+  padding: 13px 28px; border-radius: 14px;
+  font-size: 14px; font-weight: 700; font-family: inherit;
+  z-index: 200;
+  box-shadow: 0 8px 28px rgba(5,150,105,.25);
+  animation: toast .25s;
+}
+
+/* ════════ תוכן ════════ */
+.pp-wrap { max-width: 960px; margin: 0 auto; padding: 28px 28px 48px; }
+
+.pp-card {
+  background: #FFF;
+  border-radius: 20px;
+  border: 1px solid #E8ECF4;
+  padding: 28px 26px;
+  box-shadow: 0 2px 16px rgba(0,0,0,.03);
+}
+
+/* ════════ HERO ════════ */
+.pp-hero { margin-bottom: 24px; animation: fadeUp .35s; }
+.pp-hero-flex { display: flex; gap: 20px; align-items: center; flex-wrap: wrap; }
+.pp-hero-avatar { position: relative; }
+.pp-avatar-box {
+  width: 88px; height: 88px; border-radius: 20px; overflow: hidden;
+  background: linear-gradient(135deg,#2563EB,#1D4ED8);
+  color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 800; font-size: 26px; font-family: 'Outfit', sans-serif;
+  box-shadow: 0 6px 20px rgba(37,99,235,.22);
+  cursor: pointer;
+}
+.pp-avatar-box img { width: 100%; height: 100%; object-fit: cover; }
+.pp-avatar-cam {
+  position: absolute; bottom: -3px;
+  width: 30px; height: 30px; border-radius: 50%;
+  background: #2563EB; border: 3px solid #FFF; color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  padding: 0; cursor: pointer;
+}
+.pp-hero-info { flex: 1; min-width: 180px; }
+.pp-hero-name { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #1A2B4A; margin-bottom: 3px; }
+.pp-hero-spec { font-size: 14px; color: #2563EB; font-weight: 600; margin-bottom: 10px; }
+.pp-hero-rating { display: flex; align-items: center; gap: 6px; }
+.pp-rating-val { font-size: 15px; font-weight: 700; color: #1A2B4A; }
+.pp-rating-count { font-size: 13px; color: #94A3B8; }
+.pp-hero-actions { margin-top: 10px; display: flex; gap: 14px; }
+.pp-link-btn {
+  font-size: 13px; font-weight: 600; color: #2563EB;
+  cursor: pointer; background: none; border: none;
+  font-family: inherit; padding: 0;
+}
+.pp-link-btn--danger { color: #EF4444; }
+
+/* ════════ שתי עמודות ════════ */
+.pp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px; }
+.pp-col { display: flex; flex-direction: column; gap: 24px; }
+
+/* כותרת סקשן */
+.pp-sec-title {
+  font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; color: #1A2B4A;
+  margin-bottom: 22px;
+  display: flex; align-items: center; gap: 8px;
+}
+.pp-sec-title--tight { margin-bottom: 20px; }
+.pp-sec-title--tighter { margin-bottom: 18px; }
+.pp-sec-ico {
+  width: 30px; height: 30px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+}
+.pp-sec-ico--blue  { background: #EEF2FF; color: #2563EB; }
+.pp-sec-ico--amber { background: #FEF3C7; font-size: 15px; }
+.pp-sec-ico--star  { background: #FEF3C7; font-size: 14px; }
+.pp-sec-ico--green { background: #ECFDF5; color: #059669; }
+
+/* ── שדות ── */
+.pp-fields { display: flex; flex-direction: column; gap: 18px; }
+.pp-field-label {
+  font-size: 13px; font-weight: 600; color: #8896AB;
+  margin-bottom: 7px;
+  display: flex; align-items: center; gap: 6px;
+}
+.pp-input {
+  width: 100%;
+  padding: 13px 16px;
+  border-radius: 12px;
+  border: 1.5px solid #E8ECF4;
+  background: #FAFBFE;
+  font-size: 15px;
+  color: #1A2B4A;
+  font-family: inherit;
+  outline: none;
+  direction: inherit;
+  text-align: inherit;
+  transition: border .2s, background .2s;
+}
+.pp-input--active { border: 2px solid #2563EB; background: #FFF; }
+.pp-input--ltr { direction: ltr; }        /* טלפון ואימייל תמיד משמאל לימין */
+.pp-input--num { direction: ltr; text-align: center; }
+.pp-textarea { resize: vertical; line-height: 1.7; }
+
+/* ── טווח מחירים ── */
+.pp-price-row { display: flex; gap: 14px; margin-bottom: 18px; }
+.pp-price-col { flex: 1; }
+.pp-price-summary {
+  background: #F8FAFF; border-radius: 12px; padding: 14px 18px;
+  display: flex; align-items: center; justify-content: space-between;
+  border: 1px solid #EEF1F8;
+}
+.pp-price-summary-label { font-size: 13px; font-weight: 600; color: #7C8DB5; }
+.pp-price-summary-val { font-size: 16px; font-weight: 800; font-family: 'Outfit', sans-serif; color: #2563EB; }
+
+/* ── דירוג ── */
+.pp-rating-block { display: flex; align-items: center; gap: 18px; margin-bottom: 20px; }
+.pp-rating-big { font-size: 44px; font-weight: 800; font-family: 'Outfit', sans-serif; color: #1A2B4A; line-height: 1; }
+.pp-rating-stars { display: flex; justify-content: center; gap: 3px; margin-top: 8px; }
+.pp-rating-side { flex: 1; }
+.pp-rating-count-line { font-size: 15px; font-weight: 600; color: #1A2B4A; margin-bottom: 4px; }
+.pp-rating-sub { font-size: 13px; color: #94A3B8; line-height: 1.5; }
+
+/* ── ביקורות ── */
+.pp-reviews { border-top: 1px solid #F1F5F9; padding-top: 16px; display: flex; flex-direction: column; gap: 12px; }
+.pp-review-empty { text-align: center; padding: 20px; color: #94A3B8; font-size: 14px; }
+.pp-review { padding: 14px 16px; border-radius: 14px; background: #FAFBFE; border: 1px solid #F1F5F9; }
+.pp-review-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.pp-review-avatar {
+  width: 32px; height: 32px; border-radius: 9px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 13px;
+}
+.pp-review-body { flex: 1; }
+.pp-review-line { display: flex; align-items: center; justify-content: space-between; }
+.pp-review-name { font-size: 13px; font-weight: 700; color: #1A2B4A; }
+.pp-review-date { font-size: 11px; color: #B0BCCF; }
+.pp-review-stars { display: flex; gap: 2px; margin-top: 2px; }
+.pp-review-text { font-size: 13px; color: #5A6B8A; line-height: 1.6; }
+.pp-showmore {
+  width: 100%; padding: 12px; border-radius: 12px;
+  border: 2px solid #E8ECF4; background: #FAFBFE;
+  color: #2563EB; font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .2s;
+}
+
+/* ════════ אזורי שירות ════════ */
+.pp-areas-card { animation: fadeUp .55s; }
+.pp-areas { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; }
+.area-chip {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 9px 16px; border-radius: 50px;
+  background: #EEF2FF; border: 1.5px solid #C7D2FE;
+  font-size: 14px; font-weight: 600; color: #2563EB;
+  transition: all .2s;
+}
+.area-chip:hover { box-shadow: 0 2px 8px rgba(37,99,235,.12); }
+.pp-chip-x {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: #DC2626; border: none; color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; padding: 0;
+}
+.pp-add-area {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 9px 16px; border-radius: 50px;
+  background: #FAFBFE; border: 2px dashed #C7D2FE;
+  font-size: 14px; font-weight: 600; color: #2563EB;
+  cursor: pointer;
+}
+.pp-picker {
+  background: #FFF; border-radius: 14px;
+  border: 1px solid #E8ECF4;
+  box-shadow: 0 6px 24px rgba(0,0,0,.08);
+  padding: 6px; margin-bottom: 20px;
+  max-width: 300px;
+  animation: pop .2s;
+}
+.pp-picker-item {
+  width: 100%; padding: 10px 14px; border-radius: 10px;
+  border: none; background: transparent;
+  text-align: inherit;
+  font-size: 14px; color: #1A2B4A; cursor: pointer;
+  display: flex; align-items: center; gap: 7px;
+  font-family: inherit;
+  transition: background .15s;
+}
+.pp-picker-item:hover { background: #F0F4FF; }
+.pp-picker-empty { padding: 12px; font-size: 13px; color: #94A3B8; text-align: center; }
+
+/* ── מפה ── */
+.pp-map {
+  border-radius: 16px; overflow: hidden;
+  border: 1px solid #E8ECF4;
+  background: linear-gradient(180deg,#EEF2FF 0%,#F8FAFF 100%);
+  height: 200px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px;
+}
+.pp-map-ico {
+  width: 50px; height: 50px; border-radius: 50%;
+  background: #E0E7FF;
+  display: flex; align-items: center; justify-content: center;
+  color: #2563EB;
+}
+.pp-map-title { font-size: 14px; font-weight: 600; color: #5A6B8A; }
+.pp-map-sub { font-size: 12px; color: #94A3B8; }
+
+/* ── אנימציות כניסה מדורגות ── */
+.pp-fade-1 { animation: fadeUp .4s;  }
+.pp-fade-2 { animation: fadeUp .45s; }
+.pp-fade-3 { animation: fadeUp .5s;  }
+
+/* ════════ רספונסיבי ════════ */
+@media (max-width: 768px) {
+  .pp-grid { grid-template-columns: 1fr; }
+  .pp-wrap { padding: 20px 16px 40px; }
+  .pp-nav-inner { padding: 12px 16px; }
+  .pp-hero-flex { flex-direction: column; text-align: center; }
+  .pp-hero-avatar { margin: 0 auto; }
+  .pp-hero-info { text-align: center; }
+  .pp-hero-info > div { justify-content: center; }
+}

@@ -39,7 +39,9 @@ export default function SignIn() {
   var _e  = useState(savedEmail); var email  = _e[0];  var setEmail        = _e[1];
   var _p  = useState(savedPass);  var password = _p[0]; var setPassword     = _p[1];
   var _ro = useState(savedRole); var role  = _ro[0]; var setRole      = _ro[1];
-  var _rm = useState(!!savedEmail); var rememberMe = _rm[0]; var setRememberMe = _rm[1];
+  // מסומן כברירת מחדל — אלא אם המשתמש ביטל את הסימון בכניסה קודמת
+  var _rm = useState(localStorage.getItem("rememberOptOut") !== "1");
+  var rememberMe = _rm[0]; var setRememberMe = _rm[1];
   var _sp = useState(false); var showPassword=_sp[0]; var setShowPassword = _sp[1];
   var _l  = useState(false); var isLoading  = _l[0];  var setIsLoading    = _l[1];
   var _m  = useState(false); var mounted    = _m[0];  var setMounted      = _m[1];
@@ -367,11 +369,14 @@ export default function SignIn() {
             <label className="auth-checkbox-label" onClick={function() {
               var next = !rememberMe;
               setRememberMe(next);
-              // הסרת הסימון מוחקת את הפרטים השמורים מיד, לא רק בכניסה הבאה
+              // הסרת הסימון מוחקת את הפרטים השמורים מיד, וזוכרת שהמשתמש לא רוצה שנזכור
               if (!next) {
+                localStorage.setItem('rememberOptOut', '1');
                 localStorage.removeItem('rememberedEmail');
                 localStorage.removeItem('rememberedPassword');
                 localStorage.removeItem('rememberedRole');
+              } else {
+                localStorage.removeItem('rememberOptOut');
               }
             }}>
               <div className={"auth-checkbox " + (rememberMe ? "auth-checkbox--checked" : "")}>

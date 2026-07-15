@@ -15,12 +15,13 @@
  *  GET  /api/admin/orders
  */
 
-import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
-import { apiFetch } from "../services/api";
+import { useAdminData } from "../hooks/useAdminData";
 import { IcoGrid, IcoUsers, IcoShield, IcoAlert, IcoClip, IcoDollar, IcoCheck, IcoX, IcoEye, IcoBan, IcoSearch, IcoLogout, IcoWrench, IcoChevR, IcoBack, IcoStar, IcoStarNav, IcoMail, IcoPhone, IcoRefresh } from "../components/AdminIcons";
 import AdminModals from "../components/admin/AdminModals";
+import { ORDER_STATUS, COMP_PRI } from "../data/adminConstants";
+import "../styles/admin.css";
 
 const useL = () => {
   const lang = getLang();
@@ -30,18 +31,7 @@ const useL = () => {
 
 /* אייקונים מיובאים מ-components/AdminIcons.jsx */
 
-/* ─── status helpers ─── */
-const ORDER_STATUS = {
-  pending:     { bg: "#FEF3C7", color: "#92400E" },
-  in_progress: { bg: "#EDE9FE", color: "#5B21B6" },
-  done:        { bg: "#D1FAE5", color: "#065F46" },
-  cancelled:   { bg: "#FEE2E2", color: "#991B1B" },
-};
-const COMP_PRI = {
-  high:   { bg: "#FEE2E2", color: "#991B1B" },
-  medium: { bg: "#FEF3C7", color: "#92400E" },
-  low:    { bg: "#D1FAE5", color: "#065F46" },
-};
+/* קבועים מיובאים מ-data/adminConstants.js */
 
 /* ════════════════════════════════════
    Component
@@ -50,272 +40,19 @@ export default function AdminDashboard() {
   const navigate         = useNavigate();
   const { isHe, L, dir } = useL();
 
-  const [mounted,  setMounted ] = useState(false);
-  const [section,  setSection ] = useState("overview");
-  const [pros,     setPros    ] = useState([]);
-  const [proError, setProError] = useState("");
-  const [comps,    setComps   ] = useState([]);
-  const [ratings,  setRatings ] = useState([]);
-  const [users,    setUsers   ] = useState([]);
-  const [orders,   setOrders  ] = useState([]);
-  const [stats,    setStats   ] = useState({ totalUsers: 0, totalPros: 0, totalOrders: 0, revenue: 0, openComplaints: 0, pendingApprovals: 0 });
-  const [me,       setMe      ] = useState({ name: localStorage.getItem("fullName") || "Admin", email: "", profilePicture: localStorage.getItem("profilePicture") || "" });
-  const [rejectReason, setRejectReason] = useState("");
-  const [compResponse, setCompResponse] = useState("");
-  const [modal,    setModal   ] = useState(null);
-  const [search,   setSearch  ] = useState("");
-  const [filter,   setFilter  ] = useState("all");
-  const [toast,    setToast   ] = useState(null);
-  const toastRef = useRef(null);
-
-  useEffect(() => {
-    const t = setTimeout(() => setMounted(true), 40);
-    return () => clearTimeout(t);
-  }, []);
-
-  /* רענון אוטומטי — כל 20 שניות + כשחוזרים ללשונית */
-  const [refreshTick, setRefreshTick] = useState(0);
-  useEffect(() => {
-    const bump = () => setRefreshTick((t) => t + 1);
-    const iv = setInterval(bump, 20000);
-    window.addEventListener("focus", bump);
-    return () => { clearInterval(iv); window.removeEventListener("focus", bump); };
-  }, []);
-
-  /* ─── ממיר אובייקט ProProfile מהשרת למבנה שהתצוגה מצפה לו ─── */
-  const normalizePro = (p) => {
-    const u = p.user || {};                       // הפרטים האישיים מקוננים תחת user
-    const name = u.fullName || u.name || u.email || "—";
-    const trade = p.specialty || "בעל מקצוע";
-    const city = p.location || "—";
-    const exp = (p.yearsExperience != null ? p.yearsExperience + " שנים" : "—");
-    let docFiles = [];
-    try { docFiles = p.documents ? JSON.parse(p.documents) : []; } catch (e) { docFiles = []; }
-    return {
-      id: p.id,                                   // מזהה ה-ProProfile (משמש לאישור/דחייה)
-      name, nameHe: name,
-      trade, tradeHe: trade,
-      city, cityHe: city,
-      email: u.email || "—",
-      phone: u.phone || "—",
-      docFiles,                                   // מערך של {name, data}
-      docs: docFiles.length,
-      exp, expHe: exp,
-      bio: p.bio || "",
-      hourlyRate: p.hourlyRate,
-      joined: u.createdAt ? String(u.createdAt).slice(0, 10) : "—",
-      avatar: (name[0] || "?").toUpperCase(),
-    };
-  };
-
-  /* ─── משיכת בעלי המקצוע הממתינים לאישור מהשרת ─── */
-  const loadPendingPros = async () => {
-    setProError("");
-    try {
-      const r = await apiFetch("/api/admin/pros/pending");
-      const raw = await r.text();
-      if (!r.ok) {
-        setProError("סטטוס " + r.status + " — " + raw.slice(0, 300));
-        return;
-      }
-      let data;
-      try { data = JSON.parse(raw); } catch (e) {
-        setProError("התשובה אינה JSON תקין: " + raw.slice(0, 300));
-        return;
-      }
-      const list = Array.isArray(data) ? data : (data.pros || data.content || data.data || []);
-      // רשימה ריקה = אין בעלי מקצוע ממתינים (תקין) — לא שגיאה
-      setPros(list.map(normalizePro));
-    } catch (e) {
-      setProError("שגיאת חיבור לשרת: " + e.message + " (האם השרת רץ על localhost:8080?)");
-    }
-  };
-
-  useEffect(() => { loadPendingPros(); }, [refreshTick]);
-
-  /* ─── משיכת סטטיסטיקה, משתמשים והזמנות אמיתיים ─── */
-  useEffect(() => {
-    apiFetch("/api/user/me")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((u) => { if (u) { setMe({ name: u.fullName || "Admin", email: u.email || "", profilePicture: u.profilePicture || "" }); localStorage.setItem("profilePicture", u.profilePicture || ""); } })
-      .catch(() => {});
-
-    apiFetch("/api/admin/stats")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((s) => { if (s) setStats(s); })
-      .catch(() => {});
-
-    apiFetch("/api/admin/users")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        setUsers(list.map((u) => {
-          const name = u.fullName || u.email || "—";
-          const role = u.role === "PROFESSIONAL" ? "pro" : u.role === "ADMIN" ? "admin" : "client";
-          const roleHe = role === "pro" ? "בעל מקצוע" : role === "admin" ? "מנהל" : "לקוח";
-          const roleEn = role === "pro" ? "Professional" : role === "admin" ? "Admin" : "Client";
-          return {
-            id: u.id, name, nameHe: name, role, roleHe, roleEnLabel: roleEn,
-            email: u.email || "—", city: "—", cityHe: "—", orders: 0, rating: null,
-            joined: u.joined || "—", status: u.suspended ? "suspended" : "active",
-            avatar: (name[0] || "?").toUpperCase(),
-          };
-        }));
-      })
-      .catch(() => {});
-
-    apiFetch("/api/admin/orders")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        const mapSt = (s) => s === "COMPLETED" ? "done" : s === "IN_PROGRESS" ? "in_progress" : s === "CANCELLED" ? "cancelled" : "pending";
-        setOrders(list.map((o) => ({
-          id: "ORD-" + o.id,
-          date: (o.date || "").slice(0, 10),
-          service: o.serviceType || "", serviceHe: o.serviceType || "",
-          client: o.client || "", clientHe: o.client || "",
-          pro: o.pro || "", proHe: o.pro || "",
-          price: o.price != null ? o.price : 0,
-          status: mapSt(o.status),
-        })));
-      })
-      .catch(() => {});
-
-    /* תלונות אמיתיות מהשרת */
-    apiFetch("/api/admin/complaints")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        setComps(list.map((c) => {
-          const roleEn = c.complainantRole === "PROFESSIONAL" ? "Professional" : c.complainantRole === "ADMIN" ? "Admin" : "Client";
-          const roleHe = c.complainantRole === "PROFESSIONAL" ? "בעל מקצוע" : c.complainantRole === "ADMIN" ? "מנהל" : "לקוח";
-          return {
-            id: c.id,
-            subject: c.subject || "—", subjectHe: c.subject || "—",
-            description: c.description || "",
-            priority: "medium",
-            from: c.complainantName || "—", fromHe: c.complainantName || "—",
-            email: c.complainantEmail || "",
-            role: roleEn, roleHe,
-            orderId: c.bookingId ? ("ORD-" + c.bookingId) : "—",
-            date: (c.createdAt || "").slice(0, 10),
-            adminResponse: c.adminResponse || "",
-            assignedTo: null,
-            status: c.status === "RESOLVED" ? "resolved" : "open",
-          };
-        }));
-      })
-      .catch(() => {});
-
-    /* דירוגים אמיתיים מהשרת */
-    apiFetch("/api/admin/ratings")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        setRatings(list.map((r) => ({
-          id: r.id,
-          client: r.client || "—",
-          pro: r.pro || "—",
-          score: r.score || 0,
-          comment: r.comment || "",
-          service: r.service || "",
-          orderId: r.bookingId ? ("ORD-" + r.bookingId) : "—",
-          date: (r.date || "").slice(0, 10),
-        })));
-      })
-      .catch(() => {});
-  }, [refreshTick]);
-
-  const showToast = (msg, type = "success") => {
-    setToast({ msg, type });
-    clearTimeout(toastRef.current);
-    toastRef.current = setTimeout(() => setToast(null), 2800);
-  };
-
-  /* actions */
-  const approvePro  = (id) => {
-    apiFetch("/api/admin/pros/" + id + "/approve", {
-      method: "PUT",
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("failed");
-        setPros(p => p.filter(x => x.id !== id));
-        showToast(L("Pro approved ✓", "בעל מקצוע אושר ✓"));
-      })
-      .catch(() => showToast(L("Approval failed", "האישור נכשל"), "warning"))
-      .finally(() => setModal(null));
-  };
-  const rejectPro = (id, reason) => {
-    const q = reason && reason.trim() ? "?reason=" + encodeURIComponent(reason.trim()) : "";
-    apiFetch("/api/admin/pros/" + id + "/reject" + q, {
-      method: "PUT",
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("failed");
-        setPros(p => p.filter(x => x.id !== id));
-        showToast(L("Pro rejected", "בעל מקצוע נדחה"), "warning");
-      })
-      .catch(() => showToast(L("Reject failed", "הדחייה נכשלה"), "warning"))
-      .finally(() => { setModal(null); setRejectReason(""); });
-  };
-  const resolveComp = (id, response) => {
-    apiFetch("/api/admin/complaints/" + id + "/status", {
-      method: "PUT",
-      body: JSON.stringify({ status: "RESOLVED", response: response || "" }),
-    })
-      .then((r) => {
-        if (!r.ok) throw new Error("failed");
-        setComps(p => p.map(x => x.id === id ? { ...x, status: "resolved", adminResponse: response || x.adminResponse } : x));
-        showToast(L("Complaint resolved ✓", "תלונה טופלה ✓"));
-      })
-      .catch(() => showToast(L("Update failed", "העדכון נכשל"), "warning"))
-      .finally(() => { setModal(null); setCompResponse(""); });
-  };
-  const toggleUser = (id) => {
-    apiFetch("/api/admin/users/" + id + "/toggle-suspend", {
-      method: "PUT",
-    })
-      .then((r) => r.ok ? r.json() : null)
-      .then((data) => {
-        if (!data) { showToast(L("Update failed", "העדכון נכשל"), "warning"); return; }
-        setUsers(p => p.map(x => x.id === id ? { ...x, status: data.suspended ? "suspended" : "active" } : x));
-        showToast(data.suspended ? L("User suspended", "המשתמש הושעה") : L("User restored", "המשתמש שוחזר"), "info");
-      })
-      .catch(() => showToast(L("Update failed", "העדכון נכשל"), "warning"))
-      .finally(() => setModal(null));
-  };
-
-  /* העלאת תמונת פרופיל לאדמין — מכווץ ל-256px ושומר מיד */
-  const uploadAdminPhoto = (e) => {
-    const file = e.target.files && e.target.files[0];
-    if (!file || !file.type.startsWith("image/")) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const img = new Image();
-      img.onload = () => {
-        const max = 256;
-        let w = img.width, h = img.height;
-        if (w > h) { if (w > max) { h = Math.round(h * max / w); w = max; } }
-        else { if (h > max) { w = Math.round(w * max / h); h = max; } }
-        const canvas = document.createElement("canvas");
-        canvas.width = w; canvas.height = h;
-        canvas.getContext("2d").drawImage(img, 0, 0, w, h);
-        const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        apiFetch("/api/user/me", {
-          method: "PUT",
-          body: JSON.stringify({ fullName: me.name, profilePicture: dataUrl }),
-        })
-          .then((r) => (r.ok ? r.json() : null))
-          .then((u) => {
-            if (u) { setMe((m) => ({ ...m, profilePicture: u.profilePicture || "" })); localStorage.setItem("profilePicture", u.profilePicture || ""); showToast(L("Photo updated ✓", "התמונה עודכנה ✓")); }
-            else showToast(L("Update failed", "העדכון נכשל"), "warning");
-          })
-          .catch(() => showToast(L("Update failed", "העדכון נכשל"), "warning"));
-      };
-      img.src = ev.target.result;
-    };
-    reader.readAsDataURL(file);
-  };
+  /* ── כל הלוגיקה מגיעה מ-hooks/useAdminData.js ── */
+  const {
+    mounted, section, setSection,
+    pros, proError, loadPendingPros,
+    comps, ratings, users, orders, stats, me,
+    rejectReason, setRejectReason,
+    compResponse, setCompResponse,
+    modal, setModal,
+    search, setSearch,
+    filter, setFilter,
+    toast,
+    approvePro, rejectPro, resolveComp, toggleUser, uploadAdminPhoto,
+  } = useAdminData(L);
 
   /* nav */
   const NAV = [
@@ -329,95 +66,62 @@ export default function AdminDashboard() {
 
   /* back button */
   const BackBtn = () => (
-    <button
-      onClick={() => setSection("overview")}
-      style={{ display: "flex", alignItems: "center", gap: 6, padding: "9px 18px", borderRadius: 22, border: "1.5px solid #E2E8F0", background: "#FFF", color: "#64748B", fontSize: 13, fontWeight: 600, cursor: "pointer", fontFamily: "inherit", whiteSpace: "nowrap", transition: "all .16s" }}
-    >
+    <button className="admin-back-btn" onClick={() => setSection("overview")}>
       <IcoBack /> {L("Back", "חזרה")}
     </button>
   );
 
   return (
-    <div style={{ fontFamily: isHe ? "'Heebo',sans-serif" : "'DM Sans',sans-serif", background: "#F0F2F8", minHeight: "100vh", direction: dir, opacity: mounted ? 1 : 0, transition: "opacity .35s", display: "flex" }}>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@700;800;900&family=Heebo:wght@400;500;600;700;800&display=swap');
-        @keyframes fadeUp { from{opacity:0;transform:translateY(12px)} to{opacity:1;transform:translateY(0)} }
-        @keyframes popIn  { from{opacity:0;transform:scale(.94)}       to{opacity:1;transform:scale(1)}      }
-        @keyframes toastIn{ from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
-        .nav-item { transition:all .15s; cursor:pointer; border-radius:12px; }
-        .nav-item:hover { background:rgba(255,255,255,.08) !important; }
-        .hb { transition:all .16s; cursor:pointer; }
-        .hb:hover { filter:brightness(1.07); transform:translateY(-1px); }
-        .hb:active { transform:scale(.97); }
-        .trow { transition:background .12s; }
-        .trow:hover { background:#F8FAFF !important; }
-        .stat-card { transition:all .2s; }
-        .stat-card:hover { transform:translateY(-3px); box-shadow:0 12px 32px rgba(0,0,0,.09) !important; }
-        * { box-sizing:border-box; margin:0; }
-        ::-webkit-scrollbar { width:4px; }
-        ::-webkit-scrollbar-thumb { background:#CBD5E1; border-radius:4px; }
-        @media(max-width:900px) {
-          .sidebar { width:72px !important; }
-          .sidebar .nav-label { display:none !important; }
-          .sidebar .logo-text { display:none !important; }
-        }
-      `}</style>
+    <div className={`admin-page ${mounted ? "admin-page--vis" : ""}`}
+      style={{ fontFamily: isHe ? "'Heebo',sans-serif" : "'DM Sans',sans-serif", direction: dir }}>
 
       {/* ══ SIDEBAR ══ */}
-      <aside className="sidebar" style={{ width: 240, background: "linear-gradient(180deg,#0F172A 0%,#1E293B 100%)", minHeight: "100vh", display: "flex", flexDirection: "column", position: "sticky", top: 0, height: "100vh", flexShrink: 0, zIndex: 50 }}>
+      <aside className="admin-sidebar">
 
         {/* Logo */}
-        <div style={{ padding: "22px 20px 18px", borderBottom: "1px solid rgba(255,255,255,.07)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, background: "linear-gradient(135deg,#2563EB,#1D4ED8)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", flexShrink: 0 }}>
-              <IcoWrench />
-            </div>
+        <div className="admin-logo-box">
+          <div className="admin-logo-row">
+            <div className="admin-logo-icon"><IcoWrench /></div>
             <div className="logo-text">
-              <p style={{ fontFamily: "'Outfit'", fontSize: 17, fontWeight: 800, color: "#FFF", lineHeight: 1 }}>FixMate</p>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,.4)", fontWeight: 600, letterSpacing: ".8px", textTransform: "uppercase", marginTop: 2 }}>Admin Panel</p>
+              <p className="admin-logo-title">FixMate</p>
+              <p className="admin-logo-sub">Admin Panel</p>
             </div>
           </div>
         </div>
 
         {/* Nav */}
-        <nav style={{ flex: 1, padding: "16px 12px", display: "flex", flexDirection: "column", gap: 4 }}>
+        <nav className="admin-nav">
           {NAV.map(item => (
-            <div key={item.id} className="nav-item"
-              onClick={() => setSection(item.id)}
-              style={{ display: "flex", alignItems: "center", gap: 12, padding: "11px 14px", background: section === item.id ? "rgba(37,99,235,.25)" : "transparent", borderRadius: 12, border: section === item.id ? "1px solid rgba(37,99,235,.35)" : "1px solid transparent", position: "relative" }}>
-              <span style={{ color: section === item.id ? "#60A5FA" : "rgba(255,255,255,.5)", flexShrink: 0 }}><item.Icon /></span>
-              <span className="nav-label" style={{ fontSize: 13, fontWeight: 600, color: section === item.id ? "#E0EAFF" : "rgba(255,255,255,.55)" }}>{item.label}</span>
-              {item.badge && (
-                <span style={{ marginInlineStart: "auto", minWidth: 20, height: 20, borderRadius: 10, background: "#EF4444", color: "#FFF", fontSize: 10, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", padding: "0 5px" }}>{item.badge}</span>
-              )}
-              {section === item.id && (
-                <span style={{ position: "absolute", insetInlineStart: 0, top: "25%", bottom: "25%", width: 3, borderRadius: "0 2px 2px 0", background: "#3B82F6" }} />
-              )}
+            <div key={item.id} className={`nav-item admin-nav-item ${section === item.id ? "active" : ""}`}
+              onClick={() => setSection(item.id)}>
+              <span className="admin-nav-icon"><item.Icon /></span>
+              <span className="nav-label admin-nav-text">{item.label}</span>
+              {item.badge && <span className="admin-nav-badge">{item.badge}</span>}
+              {section === item.id && <span className="admin-nav-mark" />}
             </div>
           ))}
         </nav>
 
         {/* Admin info + logout */}
-        <div style={{ padding: "14px 12px", borderTop: "1px solid rgba(255,255,255,.07)" }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 12, background: "rgba(255,255,255,.05)", marginBottom: 8 }}>
-            <label htmlFor="admin-pfp-input" title={L("Change photo", "החלף תמונה")} style={{ width: 32, height: 32, borderRadius: 9, overflow: "hidden", background: "linear-gradient(135deg,#7C3AED,#5B21B6)", display: "flex", alignItems: "center", justifyContent: "center", color: "#FFF", fontSize: 13, fontWeight: 800, flexShrink: 0, cursor: "pointer" }}>
-              {me.profilePicture ? <img src={me.profilePicture} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (me.name || "A").charAt(0).toUpperCase()}
+        <div className="admin-user-box">
+          <div className="admin-user-row">
+            <label htmlFor="admin-pfp-input" title={L("Change photo", "החלף תמונה")} className="admin-avatar">
+              {me.profilePicture ? <img src={me.profilePicture} alt="" /> : (me.name || "A").charAt(0).toUpperCase()}
             </label>
             <input id="admin-pfp-input" type="file" accept="image/*" onChange={uploadAdminPhoto} style={{ display: "none" }} />
             <div className="logo-text">
-              <p style={{ fontSize: 12, fontWeight: 700, color: "#FFF" }}>{me.name}</p>
-              <p style={{ fontSize: 10, color: "rgba(255,255,255,.35)" }}>{me.email}</p>
+              <p className="admin-user-name">{me.name}</p>
+              <p className="admin-user-email">{me.email}</p>
             </div>
           </div>
-          <button onClick={() => navigate("/login")} className="hb"
-            style={{ width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", borderRadius: 10, background: "transparent", border: "none", color: "rgba(255,255,255,.35)", fontSize: 12, fontWeight: 600, cursor: "pointer", fontFamily: "inherit" }}>
+          <button onClick={() => navigate("/login")} className="hb admin-logout">
             <IcoLogout /><span className="nav-label">{L("Sign Out", "יציאה")}</span>
           </button>
         </div>
       </aside>
 
       {/* ══ CONTENT ══ */}
-      <div style={{ flex: 1, overflowY: "auto", padding: "28px 28px 60px", minWidth: 0 }}>
+      <div className="admin-content">
 
         {/* ─── OVERVIEW ─── */}
         {section === "overview" && (

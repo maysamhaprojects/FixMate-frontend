@@ -79,25 +79,6 @@ const IconChevron = ({ up }) => (
 /* Data */
 const SHEKEL = "\u20AA";
 
-const INIT = {
-  name: { en: "Amoona Hiouala", he: "\u05D0\u05DE\u05D5\u05E0\u05D4 \u05D7\u05D9\u05D5\u05D0\u05DC\u05D4" },
-  role: { en: "Licensed Electrician", he: "\u05D7\u05E9\u05DE\u05DC\u05D0\u05D9 \u05DE\u05D5\u05E1\u05DE\u05DA" },
-  avatar: { en: "AM", he: "\u05D0\u05D7" },
-  rating: 4.84,
-  reviewCount: 127,
-  phone: "054-885-8793",
-  email: "amore@gmail.com",
-  bio: { en: "Experienced professional with 12 years of experience in the field.", he: "\u05D1\u05E2\u05DC \u05DE\u05E7\u05E6\u05D5\u05E2 \u05DE\u05E0\u05D5\u05E1\u05D4 \u05E2\u05DD 12 \u05E9\u05E0\u05D5\u05EA \u05E0\u05D9\u05E1\u05D9\u05D5\u05DF" },
-  minPrice: 150,
-  maxPrice: 1000,
-  areas: [
-    { en: "Tel Aviv", he: "\u05EA\u05DC \u05D0\u05D1\u05D9\u05D1" },
-    { en: "Rishon LeZion", he: "\u05E8\u05D9\u05E9\u05D5\u05DF \u05DC\u05E6\u05D9\u05D5\u05DF" },
-    { en: "Bat Yam", he: "\u05D1\u05EA \u05D9\u05DD" },
-    { en: "Holon", he: "\u05D7\u05D5\u05DC\u05D5\u05DF" },
-  ],
-};
-
 const ALL_AREAS = [
   { en: "Tel Aviv", he: "\u05EA\u05DC \u05D0\u05D1\u05D9\u05D1" },
   { en: "Rishon LeZion", he: "\u05E8\u05D9\u05E9\u05D5\u05DF \u05DC\u05E6\u05D9\u05D5\u05DF" },
@@ -111,14 +92,6 @@ const ALL_AREAS = [
   { en: "Jerusalem", he: "\u05D9\u05E8\u05D5\u05E9\u05DC\u05D9\u05DD" },
 ];
 
-const REVIEWS = [
-  { name: { en: "Sarah Cohen", he: "\u05E9\u05E8\u05D4 \u05DB\u05D4\u05DF" }, rating: 5, date: { en: "2 weeks ago", he: "\u05DC\u05E4\u05E0\u05D9 \u05E9\u05D1\u05D5\u05E2\u05D9\u05D9\u05DD" }, text: { en: "Punctual, professional, fixed our issue quickly. Highly recommend!", he: "\u05D3\u05D9\u05D9\u05E7\u05E0\u05D9, \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9, \u05EA\u05D9\u05E7\u05DF \u05DE\u05D4\u05E8. \u05DE\u05DE\u05DC\u05D9\u05E6\u05D4 \u05D1\u05D7\u05D5\u05DD!" } },
-  { name: { en: "Amit Levy", he: "\u05E2\u05DE\u05D9\u05EA \u05DC\u05D5\u05D9" }, rating: 5, date: { en: "1 month ago", he: "\u05DC\u05E4\u05E0\u05D9 \u05D7\u05D5\u05D3\u05E9" }, text: { en: "Excellent ceiling fan install. Came prepared, finished early. Fair price.", he: "\u05D4\u05EA\u05E7\u05E0\u05EA \u05DE\u05D0\u05D5\u05D5\u05E8\u05E8 \u05DE\u05E6\u05D5\u05D9\u05E0\u05EA. \u05D4\u05D2\u05D9\u05E2 \u05DE\u05D5\u05DB\u05DF, \u05E1\u05D9\u05D9\u05DD \u05DC\u05E4\u05E0\u05D9 \u05D4\u05D6\u05DE\u05DF." } },
-  { name: { en: "Rina Goldberg", he: "\u05E8\u05D9\u05E0\u05D4 \u05D2\u05D5\u05DC\u05D3\u05D1\u05E8\u05D2" }, rating: 4, date: { en: "2 months ago", he: "\u05DC\u05E4\u05E0\u05D9 \u05D7\u05D5\u05D3\u05E9\u05D9\u05D9\u05DD" }, text: { en: "Good panel inspection. Found and fixed the breaker issue.", he: "\u05D1\u05D3\u05D9\u05E7\u05EA \u05DC\u05D5\u05D7 \u05D8\u05D5\u05D1\u05D4. \u05DE\u05E6\u05D0 \u05D5\u05EA\u05D9\u05E7\u05DF \u05D0\u05EA \u05D4\u05EA\u05E7\u05DC\u05D4." } },
-  { name: { en: "Noa Katz", he: "\u05E0\u05D5\u05E2\u05D4 \u05DB\u05E5" }, rating: 5, date: { en: "3 months ago", he: "\u05DC\u05E4\u05E0\u05D9 3 \u05D7\u05D5\u05D3\u05E9\u05D9\u05DD" }, text: { en: "Great wiring job, very clean work. Will call again for sure.", he: "\u05E2\u05D1\u05D5\u05D3\u05EA \u05D7\u05D9\u05D5\u05D5\u05D8 \u05DE\u05E2\u05D5\u05DC\u05D4, \u05E2\u05D1\u05D5\u05D3\u05D4 \u05E0\u05E7\u05D9\u05D4 \u05DE\u05D0\u05D5\u05D3. \u05D0\u05D6\u05DE\u05D9\u05DF \u05E9\u05D5\u05D1." } },
-  { name: { en: "Moshe Peretz", he: "\u05DE\u05E9\u05D4 \u05E4\u05E8\u05E5" }, rating: 5, date: { en: "4 months ago", he: "\u05DC\u05E4\u05E0\u05D9 4 \u05D7\u05D5\u05D3\u05E9\u05D9\u05DD" }, text: { en: "Installed new outlets in our kitchen. Fast and reliable.", he: "\u05D4\u05EA\u05E7\u05D9\u05DF \u05E9\u05E7\u05E2\u05D9\u05DD \u05D7\u05D3\u05E9\u05D9\u05DD \u05D1\u05DE\u05D8\u05D1\u05D7. \u05DE\u05D4\u05D9\u05E8 \u05D5\u05D0\u05DE\u05D9\u05DF." } },
-  { name: { en: "Maya Shapira", he: "\u05DE\u05D0\u05D9\u05D4 \u05E9\u05E4\u05D9\u05E8\u05D0" }, rating: 4, date: { en: "5 months ago", he: "\u05DC\u05E4\u05E0\u05D9 5 \u05D7\u05D5\u05D3\u05E9\u05D9\u05DD" }, text: { en: "Professional service. Explained everything clearly before starting.", he: "\u05E9\u05D9\u05E8\u05D5\u05EA \u05DE\u05E7\u05E6\u05D5\u05E2\u05D9. \u05D4\u05E1\u05D1\u05D9\u05E8 \u05D4\u05DB\u05DC \u05DC\u05E4\u05E0\u05D9 \u05E9\u05D4\u05EA\u05D7\u05D9\u05DC." } },
-];
 
 export default function ProProfile() {
   const navigate = useNavigate();

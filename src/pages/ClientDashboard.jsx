@@ -18,29 +18,12 @@ import "../styles/client.css";
 
 /* אייקוני SVG מיובאים מ-components/Icons.jsx */
 
-/* ─── MOCK DATA ─── */
-var MOCK_ORDERS_DATA = {
-  en: [
-    { id: "ORD-1041", proName: "Ori Cohen", proRole: "Electrician", proAvatar: null, rating: 4.8, status: "confirmed", date: "Feb 20, 2026", time: "10:00 AM", phone: "+972 50-123-4567", description: "Fix kitchen light switch + install new outlet" },
-    { id: "ORD-1038", proName: "Yosi Ben-Tzur", proRole: "Plumber", proAvatar: null, rating: 4.6, status: "in_progress", date: "Feb 18, 2026", time: "2:00 PM", phone: "+972 52-987-6543", description: "Bathroom pipe leak — needs immediate repair" },
-    { id: "ORD-1025", proName: "Dana Levy", proRole: "Painter", proAvatar: null, rating: 4.9, status: "pending", date: "Feb 22, 2026", time: "9:00 AM", phone: "+972 54-111-2222", description: "Paint living room walls — white to light grey" },
-    { id: "ORD-1020", proName: "Lior Azulay", proRole: "AC Technician", proAvatar: null, rating: 4.7, status: "completed", date: "Feb 15, 2026", time: "11:00 AM", phone: "+972 53-444-5555", description: "AC unit maintenance + filter replacement" },
-  ],
-  he: [
-    { id: "ORD-1041", proName: "אורי כהן", proRole: "חשמלאי", proAvatar: null, rating: 4.8, status: "confirmed", date: "20/02/2026", time: "10:00", phone: "+972 50-123-4567", description: "תיקון מתג תאורה במטבח + התקנת שקע חדש" },
-    { id: "ORD-1038", proName: "יוסי בן-צור", proRole: "שרברב", proAvatar: null, rating: 4.6, status: "in_progress", date: "18/02/2026", time: "14:00", phone: "+972 52-987-6543", description: "נזילת צינור באמבטיה — דרוש תיקון מיידי" },
-    { id: "ORD-1025", proName: "דנה לוי", proRole: "צבעית", proAvatar: null, rating: 4.9, status: "pending", date: "22/02/2026", time: "09:00", phone: "+972 54-111-2222", description: "צביעת קירות הסלון — מלבן לאפור בהיר" },
-    { id: "ORD-1020", proName: "ליאור אזולאי", proRole: "טכנאי מזגנים", proAvatar: null, rating: 4.7, status: "completed", date: "15/02/2026", time: "11:00", phone: "+972 53-444-5555", description: "תחזוקת מזגן + החלפת פילטר" },
-  ],
-};
-
 export default function ClientDashboard() {
   const navigate = useNavigate();
   var t = translate;
   var dir = getDir();
   var lang = getLang();
   var isHe = lang === "he";
-  var MOCK_ORDERS = MOCK_ORDERS_DATA[lang] || MOCK_ORDERS_DATA.en;
   const [mounted, setMounted] = useState(false);
   const [userName] = useState(localStorage.getItem("fullName") || (lang === "he" ? "אורח" : "Guest"));
   const [avatarPic, setAvatarPic] = useState(localStorage.getItem("profilePicture") || "");

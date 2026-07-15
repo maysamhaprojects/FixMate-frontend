@@ -55,16 +55,6 @@ const STATUS_STYLE = {
   cancelled:   { topBar: "#EF4444", cardBg: "#FFF5F5", tagBg: "#FEE2E2", tagColor: "#991B1B", tagBorder: "#FECACA", dot: "#EF4444", Icon: IcoCancelled,  label: { en: "Cancelled",   he: "בוטל"   } },
 };
 
-/* 🚩 BACKEND: GET /api/pro/orders */
-const MOCK_ORDERS = [
-  { id: "ORD-2050", clientName: { en: "Sarah Cohen",   he: "שרה כהן"     }, service: { en: "Fix electrical outlet",  he: "תיקון שקע חשמל"    }, description: { en: "Broken outlet in living room, sparking when plugging devices", he: "שקע תקול בסלון, מנצנץ בעת חיבור מכשירים" }, date: { en: "Feb 22, 2026", he: "22 בפבר 2026" }, time: "10:00", location: { en: "Tel Aviv, Dizengoff 45",  he: "תל אביב, דיזנגוף 45"  }, phone: "+972 50-111-2222", price: 320, status: "pending"     },
-  { id: "ORD-2051", clientName: { en: "Amit Levy",     he: "עמית לוי"    }, service: { en: "Install ceiling fan",    he: "התקנת מאוורר תקרה" }, description: { en: "New ceiling fan installation in bedroom, wiring needed",     he: "התקנת מאוורר חדש בחדר שינה, נדרש חיווט"  }, date: { en: "Feb 22, 2026", he: "22 בפבר 2026" }, time: "14:00", location: { en: "Haifa, Herzl 12",         he: "חיפה, הרצל 12"        }, phone: "+972 52-333-4444", price: 480, status: "pending"     },
-  { id: "ORD-2049", clientName: { en: "Maya Shapira",  he: "מאיה שפירא"  }, service: { en: "Electrical panel check", he: "בדיקת לוח חשמל"    }, description: { en: "Breaker keeps tripping, need full panel inspection",         he: "מפסק נופל כל הזמן, נדרשת בדיקה מלאה"     }, date: { en: "Feb 21, 2026", he: "21 בפבר 2026" }, time: "9:00",  location: { en: "Ramat Gan, Bialik 8",     he: "רמת גן, ביאליק 8"     }, phone: "+972 54-555-6666", price: 550, status: "confirmed"   },
-  { id: "ORD-2048", clientName: { en: "Moshe Peretz",  he: "משה פרץ"     }, service: { en: "Install outlet",         he: "התקנת שקע"         }, description: { en: "Install new outlet in home office",                          he: "התקנת שקע חדש בחדר עבודה"                 }, date: { en: "Feb 21, 2026", he: "21 בפבר 2026" }, time: "11:30", location: { en: "Ramat Gan, Weizmann 3",   he: "רמת גן, ויצמן 3"      }, phone: "+972 52-999-0000", price: 290, status: "in_progress" },
-  { id: "ORD-2045", clientName: { en: "Rina Goldberg", he: "רינה גולדברג" }, service: { en: "Fix light switch",       he: "תיקון מתג אור"     }, description: { en: "Light switch stopped working in hallway",                    he: "מתג האור במסדרון הפסיק לעבוד"             }, date: { en: "Feb 18, 2026", he: "18 בפבר 2026" }, time: "9:00",  location: { en: "Tel Aviv, Ben Yehuda 20", he: "תל אביב, בן יהודה 20" }, phone: "+972 50-777-8888", price: 180, status: "done"        },
-  { id: "ORD-2043", clientName: { en: "Noa Katz",      he: "נועה כץ"     }, service: { en: "Wiring repair",          he: "תיקון חיווט"       }, description: { en: "Faulty wiring causing flickering lights",                    he: "חיווט לקוי גורם לרצד של אורות"            }, date: { en: "Feb 17, 2026", he: "17 בפבר 2026" }, time: "14:00", location: { en: "Herzliya, Ha-Taasiya 5",  he: "הרצליה, התעשייה 5"    }, phone: "+972 54-111-3333", price: 420, status: "cancelled"   },
-];
-
 /* ── כפתורי פעולה לפי סטטוס ── */
 const getActions = (status) => {
   if (status === "pending")     return [

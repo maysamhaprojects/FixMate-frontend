@@ -20,24 +20,12 @@
  * =============================================
  */
 
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { translate, getLang, getDir } from "../context/LanguageContext";
-import { apiFetch } from "../services/api";
+import { useProData } from "../hooks/useProData";
+import { IconBell, IconLogout, IconWrench, IconStar, IconPhone, IconCalendar, IconDollar, IconInbox, IconMapPin, IconQuote } from "../components/ProIcons";
 
-/* ─────────────────────────────────────────
-   Icons – SVG ידניים, ללא ספריות חיצוניות
-───────────────────────────────────────── */
-const IconBell     = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
-const IconLogout   = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>;
-const IconWrench   = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>;
-const IconStar     = ({ filled }) => <svg width="16" height="16" viewBox="0 0 24 24" fill={filled ? "#FBBF24" : "none"} stroke="#FBBF24" strokeWidth="1.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>;
-const IconPhone    = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>;
-const IconCalendar = () => <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
-const IconDollar   = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
-const IconInbox    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"/></svg>;
-const IconMapPin   = () => <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>;
-const IconQuote    = () => <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M14.017 21v-7.391c0-5.704 3.731-9.57 8.983-10.609l.995 2.151c-2.432.917-3.995 3.638-3.995 5.849h4v10h-9.983zm-14.017 0v-7.391c0-5.704 3.748-9.57 9-10.609l.996 2.151c-2.433.917-3.996 3.638-3.996 5.849h3.983v10h-9.983z"/></svg>;
+/* אייקונים מיובאים מ-components/ProIcons.jsx */
 
 /* ─────────────────────────────────────────
    Mock Data
@@ -70,183 +58,16 @@ export default function ProDashboard() {
       ? obj
       : obj?.en ?? "";
 
-  /* state */
-  const [mounted,     setMounted    ] = useState(false);
-  const [activeTab,   setActiveTab  ] = useState("dashboard");
-  const [showNotif,   setShowNotif  ] = useState(false);
-  const [notifications, setNotifications] = useState([]);
-  const [expandedReview, setExpandedReview] = useState(null); // איזו ביקורת פתוחה
-
-  /* פרטי בעל המקצוע המחובר (מהשרת) */
-  const [me, setMe] = useState({
-    name: localStorage.getItem("fullName") || "",
-    specialty: "",
-    rating: null,
-    avatar: (localStorage.getItem("fullName") || "?").charAt(0).toUpperCase(),
-    profilePicture: localStorage.getItem("profilePicture") || "",
-  });
-
-  /* סטטיסטיקות אמיתיות (מאותחל ל-0 עבור בעל מקצוע חדש) */
-  const [stats, setStats] = useState({
-    newOrders: 0, todayOrders: 0, weeklyIncome: 0, rating: 0, totalRatings: 0,
-  });
-
-  /* ביקורות ולוח זמנים אמיתיים (מאותחלים ריקים) */
-  const [reviews, setReviews] = useState([]);
-  const [schedule, setSchedule] = useState([]);
-
-  /* אנימציית כניסה */
-  useEffect(() => {
-    const tm = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(tm);
-  }, []);
-
-  /* רענון אוטומטי — כל 20 שניות + כשחוזרים ללשונית */
-  const [refreshTick, setRefreshTick] = useState(0);
-  useEffect(() => {
-    const bump = () => setRefreshTick((t) => t + 1);
-    const iv = setInterval(bump, 20000);
-    window.addEventListener("focus", bump);
-    return () => { clearInterval(iv); window.removeEventListener("focus", bump); };
-  }, []);
-
-  /* משיכת הפרופיל האמיתי של בעל המקצוע המחובר */
-  useEffect(() => {
-    apiFetch("/api/pro/profile")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((p) => {
-        if (!p) return;
-        const u = p.user || {};
-        const name = u.fullName || localStorage.getItem("fullName") || "";
-        setMe({
-          name,
-          specialty: p.specialty || "",
-          rating: p.averageRating != null ? p.averageRating : null,
-          avatar: (name || "?").charAt(0).toUpperCase(),
-          profilePicture: u.profilePicture || "",
-        });
-        localStorage.setItem("profilePicture", u.profilePicture || "");
-      })
-      .catch(() => { /* אם נכשל — נשארים עם השם מ-localStorage */ });
-  }, []);
-
-  /* משיכת הסטטיסטיקות האמיתיות של בעל המקצוע */
-  useEffect(() => {
-    apiFetch("/api/pro/stats")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((s) => {
-        if (!s) return;
-        setStats({
-          newOrders:    s.newOrders    || 0,
-          todayOrders:  s.todayOrders  || 0,
-          weeklyIncome: s.weeklyIncome || 0,
-          rating:       s.rating       || 0,
-          totalRatings: s.totalRatings || 0,
-        });
-      })
-      .catch(() => { /* אם נכשל — נשארים עם 0 */ });
-  }, [refreshTick]);
-
-  /* משיכת הביקורות האמיתיות */
-  useEffect(() => {
-    apiFetch("/api/pro/reviews")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        setReviews(list.map((r) => ({
-          id: r.id,
-          clientName: { en: r.clientName || "", he: r.clientName || "" },
-          service:    { en: r.serviceType || "", he: r.serviceType || "" },
-          rating:     r.score || 0,
-          date:       { en: (r.date || "").slice(0, 10), he: (r.date || "").slice(0, 10) },
-          comment:    { en: r.comment || "", he: r.comment || "" },
-          orderId:    r.bookingId ? "ORD-" + r.bookingId : "",
-        })));
-      })
-      .catch(() => { /* אם נכשל — נשארים עם רשימה ריקה */ });
-  }, []);
-
-  /* המרת תאריך ל"לפני X" */
-  const timeAgo = (iso) => {
-    if (!iso) return { en: "", he: "" };
-    const diff = Date.now() - new Date(iso).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1)  return { en: "just now",       he: "עכשיו" };
-    if (mins < 60) return { en: mins + " min ago", he: "לפני " + mins + " דקות" };
-    const hrs = Math.floor(mins / 60);
-    if (hrs < 24)  return { en: hrs + " hr ago",   he: "לפני " + hrs + " שעות" };
-    const days = Math.floor(hrs / 24);
-    return { en: days + " d ago", he: "לפני " + days + " ימים" };
-  };
-
-  /* משיכת ההתראות האמיתיות */
-  useEffect(() => {
-    apiFetch("/api/pro/notifications")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        setNotifications(list.map((n) => {
-          const name = n.clientName || "";
-          if (n.type === "RATING") {
-            return {
-              id: n.id, iconType: "rating", color: "#F59E0B", bg: "#FFF7ED",
-              text: { en: name + " rated you " + n.detail + " stars!", he: name + " דירג אותך " + n.detail + " כוכבים!" },
-              time: timeAgo(n.date), read: false,
-            };
-          }
-          if (n.type === "CANCELLED") {
-            return {
-              id: n.id, iconType: "cancelled", color: "#DC2626", bg: "#FEF2F2",
-              text: { en: name + " cancelled their order — " + n.detail, he: name + " ביטל/ה את ההזמנה — " + n.detail },
-              time: timeAgo(n.date), read: false,
-            };
-          }
-          return {
-            id: n.id, iconType: "order", color: "#2563EB", bg: "#EEF2FF",
-            text: { en: "New order from " + name + " — " + n.detail, he: "הזמנה חדשה מ" + name + " — " + n.detail },
-            time: timeAgo(n.date), read: false,
-          };
-        }));
-      })
-      .catch(() => { /* אם נכשל — נשארים עם רשימה ריקה */ });
-  }, [refreshTick]);
-
-  /* מיפוי סטטוס מהשרת לצבעים בתצוגה */
-  const mapStatus = (s) => {
-    if (s === "COMPLETED") return "completed";
-    if (s === "IN_PROGRESS") return "in_progress";
-    return "upcoming"; // PENDING / CONFIRMED
-  };
-
-  /* משיכת לוח הזמנים של היום */
-  useEffect(() => {
-    apiFetch("/api/pro/schedule/today")
-      .then((r) => (r.ok ? r.json() : null))
-      .then((list) => {
-        if (!Array.isArray(list)) return;
-        // מסננים הזמנות מבוטלות — הן לא פגישות פעילות בלוח
-        setSchedule(list.filter((b) => (b.status || "").toUpperCase() !== "CANCELLED").map((b) => ({
-          status:   mapStatus(b.status),
-          time:     (b.scheduledAt || "").slice(11, 16),
-          client:   { en: b.clientName || "", he: b.clientName || "" },
-          service:  { en: b.serviceType || "", he: b.serviceType || "" },
-          location: { en: b.address || "", he: b.address || "" },
-          phone:    b.clientPhone || "",
-        })));
-      })
-      .catch(() => { /* אם נכשל — נשארים עם רשימה ריקה */ });
-  }, [refreshTick]);
-
-  /* חישובים */
-  const unreadCount = notifications.filter(n => !n.read).length;
-
-  /* סמן כל ההתראות כנקראו */
-  const markAllRead = () =>
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-
-  /* scroll לסקשן */
-  const scrollTo = (id) =>
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
+  /* ── כל הלוגיקה מגיעה מ-hooks/useProData.js ── */
+  const {
+    mounted,
+    activeTab, setActiveTab,
+    showNotif, setShowNotif,
+    notifications, unreadCount, markAllRead,
+    expandedReview, setExpandedReview,
+    me, stats, reviews, schedule,
+    scrollTo,
+  } = useProData();
 
   /* לשוניות ניווט */
   const TABS = [

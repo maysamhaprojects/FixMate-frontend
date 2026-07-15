@@ -177,13 +177,14 @@ export function useProData() {
   /* חישובים ופעולות */
   const unreadCount = notifications.filter(n => !n.read).length;
   const markAllRead = () => setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markRead    = (id) => setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
   const scrollTo = (id) => document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
 
   return {
     mounted,
     activeTab, setActiveTab,
     showNotif, setShowNotif,
-    notifications, unreadCount, markAllRead,
+    notifications, unreadCount, markAllRead, markRead,
     expandedReview, setExpandedReview,
     me, stats, reviews, schedule,
     scrollTo,

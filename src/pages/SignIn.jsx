@@ -31,10 +31,15 @@ export default function SignIn() {
   var dir       = langCtx.dir;
   var isHe      = lang === "he";
 
-  var _e  = useState(""); var email        = _e[0];  var setEmail        = _e[1];
-  var _p  = useState(""); var password      = _p[0];  var setPassword      = _p[1];
-  var _ro = useState("professional"); var role = _ro[0]; var setRole      = _ro[1];
-  var _rm = useState(false); var rememberMe = _rm[0]; var setRememberMe   = _rm[1];
+  // "זכור אותי" — טוענים את הפרטים שנשמרו בכניסה הקודמת
+  var savedEmail = localStorage.getItem("rememberedEmail") || "";
+  var savedPass  = localStorage.getItem("rememberedPassword") || "";
+  var savedRole  = localStorage.getItem("rememberedRole")  || "professional";
+
+  var _e  = useState(savedEmail); var email  = _e[0];  var setEmail        = _e[1];
+  var _p  = useState(savedPass);  var password = _p[0]; var setPassword     = _p[1];
+  var _ro = useState(savedRole); var role  = _ro[0]; var setRole      = _ro[1];
+  var _rm = useState(!!savedEmail); var rememberMe = _rm[0]; var setRememberMe = _rm[1];
   var _sp = useState(false); var showPassword=_sp[0]; var setShowPassword = _sp[1];
   var _l  = useState(false); var isLoading  = _l[0];  var setIsLoading    = _l[1];
   var _m  = useState(false); var mounted    = _m[0];  var setMounted      = _m[1];
@@ -95,9 +100,14 @@ export default function SignIn() {
 
       if (!response.ok) {
         // הודעה מותאמת לפי סוג השגיאה מהשרת
-        let msg = "לא נמצא חשבון. אנא הירשם קודם.";
+        let msg = isHe ? "אירעה שגיאה בהתחברות. אנא נסו שוב."
+                       : "Sign-in failed. Please try again.";
         const err = data.error || "";
-        if (err === "Your account is pending admin approval") {
+        // השרת לא מגלה בכוונה אם המייל או הסיסמה שגויים — הגנה מפני גילוי חשבונות רשומים
+        if (err === "Invalid email or password") {
+          msg = isHe ? "אימייל או סיסמה שגויים. שימו לב שהסיסמה רגישה לאותיות גדולות וקטנות."
+                     : "Incorrect email or password. Note that passwords are case-sensitive.";
+        } else if (err === "Your account is pending admin approval") {
           msg = "החשבון שלך ממתין לאישור אדמין. תוכל להתחבר לאחר שהאדמין יאשר.";
         } else if (err === "Your account has been suspended") {
           msg = "החשבון שלך הושעה על ידי מנהל המערכת. לפרטים פנה לתמיכה.";
@@ -138,6 +148,17 @@ export default function SignIn() {
       localStorage.setItem('role', data.role);
       localStorage.setItem('fullName', data.fullName);
 
+      // "זכור אותי" — שומר מייל, סיסמה ותפקיד כדי למלא אותם אוטומטית בכניסה הבאה
+      if (rememberMe) {
+        localStorage.setItem('rememberedEmail', email);
+        localStorage.setItem('rememberedPassword', password);
+        localStorage.setItem('rememberedRole', role);
+      } else {
+        localStorage.removeItem('rememberedEmail');
+        localStorage.removeItem('rememberedPassword');
+        localStorage.removeItem('rememberedRole');
+      }
+
       if (data.role === 'CLIENT') { navigate('/client/dashboard'); }
       else if (data.role === 'ADMIN') { navigate('/admin'); }
       else { navigate('/pro/dashboard'); }
@@ -170,7 +191,11 @@ export default function SignIn() {
       </button>
 
       <div className={"auth-card-wrapper " + (mounted ? "auth-card-wrapper--visible" : "")}>
-        <div className={"auth-card " + (shakeError ? "auth-card--shake" : "")}>
+        {/* טופס אמיתי — כך הדפדפן מזהה מסך התחברות ומציע לשמור/למלא סיסמה */}
+        <form
+          className={"auth-card " + (shakeError ? "auth-card--shake" : "")}
+          onSubmit={function(e) { e.preventDefault(); handleSubmit(); }}
+        >
 
           <div className="auth-header">
             <h1 className="auth-logo">
@@ -204,6 +229,8 @@ export default function SignIn() {
               <IconMail />
               <input
                 type="email"
+                name="email"
+                autoComplete="username"
                 className="auth-input"
                 placeholder="name@email.com"
                 value={email}
@@ -225,6 +252,8 @@ export default function SignIn() {
               <IconLock />
               <input
                 type={showPassword ? "text" : "password"}
+                name="password"
+                autoComplete="current-password"
                 className="auth-input"
                 placeholder="••••••••"
                 value={password}
@@ -335,7 +364,16 @@ export default function SignIn() {
 
           {/* Remember me + Forgot */}
           <div className="auth-options-row">
-            <label className="auth-checkbox-label" onClick={function() { setRememberMe(!rememberMe); }}>
+            <label className="auth-checkbox-label" onClick={function() {
+              var next = !rememberMe;
+              setRememberMe(next);
+              // הסרת הסימון מוחקת את הפרטים השמורים מיד, לא רק בכניסה הבאה
+              if (!next) {
+                localStorage.removeItem('rememberedEmail');
+                localStorage.removeItem('rememberedPassword');
+                localStorage.removeItem('rememberedRole');
+              }
+            }}>
               <div className={"auth-checkbox " + (rememberMe ? "auth-checkbox--checked" : "")}>
                 {rememberMe && (
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white"
@@ -346,15 +384,15 @@ export default function SignIn() {
               </div>
               {isHe ? "זכור אותי" : "Remember me"}
             </label>
-            <button className="auth-forgot-link" onClick={function() { navigate("/forgot-password"); }}>
+            <button type="button" className="auth-forgot-link" onClick={function() { navigate("/forgot-password"); }}>
               {isHe ? "שכחת סיסמה?" : "Forgot password?"}
             </button>
           </div>
 
           {/* Submit */}
           <button
+            type="submit"
             className={"auth-submit-btn " + (isLoading ? "auth-submit-btn--loading" : "")}
-            onClick={handleSubmit}
             disabled={isLoading}
             /* צבע סגול לאדמין */
             style={role === "admin" && !isLoading ? {
@@ -373,11 +411,11 @@ export default function SignIn() {
 
           <p className="auth-switch-text">
             {isHe ? "אין לכם חשבון? " : "Don't have an account? "}
-            <button className="auth-switch-link" onClick={function() { navigate("/register"); }}>
+            <button type="button" className="auth-switch-link" onClick={function() { navigate("/register"); }}>
               {isHe ? "צרו חשבון" : "Create an account"}
             </button>
           </p>
-        </div>
+        </form>
         <div className="auth-decorative-pill" />
       </div>
     </div>

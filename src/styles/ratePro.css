@@ -1,0 +1,159 @@
+/* ============================================================
+ *  FixMate — עיצוב מסך הדירוג
+ *  חולץ מ-RatePro.jsx (ה-<style> הפנימי + inline styles).
+ *  התחילית rp- מונעת התנגשות עם שאר קבצי העיצוב.
+ *  שימוש:  import "../styles/ratePro.css";
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Heebo:wght@400;500;600;700;800;900&display=swap');
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn  { 0% { transform: scale(0); } 50% { transform: scale(1.2); } 100% { transform: scale(1); } }
+@keyframes spin   { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+.starBtn:hover svg { transform: scale(1.2); }
+
+/* ── עמוד ── */
+.rp-page {
+  font-family: 'DM Sans', 'Inter', sans-serif;
+  background: linear-gradient(135deg,#F0F4FF 0%,#F8FAFF 50%,#FFF 100%);
+  min-height: 100vh;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.rp-page * { box-sizing: border-box; margin: 0; }
+
+/* ════════ מסך תודה ════════ */
+.rp-done { text-align: center; animation: fadeUp .4s; max-width: 420px; width: 100%; }
+.rp-done-check {
+  width: 88px; height: 88px; border-radius: 50%;
+  background: linear-gradient(135deg,#059669,#10B981);
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 24px;
+  animation: popIn .5s;
+}
+.rp-done-title { font-family: 'Outfit'; font-size: 28px; font-weight: 800; color: #1A2B4A; margin-bottom: 10px; }
+.rp-done-sub { font-size: 16px; color: #7C8DB5; line-height: 1.6; }
+
+/* ════════ כרטיס הדירוג ════════ */
+.rp-card {
+  background: #FFF; border-radius: 28px;
+  padding: 44px 32px 36px;
+  max-width: 440px; width: 100%;
+  text-align: center;
+  box-shadow: 0 8px 40px rgba(0,0,0,.06);
+  border: 1px solid #E8ECF4;
+  animation: fadeUp .4s;
+}
+.rp-avatar {
+  width: 72px; height: 72px; border-radius: 20px;
+  background: linear-gradient(135deg,#3B82F6,#2563EB);
+  color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 22px;
+  margin: 0 auto 16px;
+  box-shadow: 0 6px 24px rgba(37,99,235,.25);
+}
+.rp-title { font-family: 'Outfit'; font-size: 24px; font-weight: 800; color: #1A2B4A; margin-bottom: 4px; }
+.rp-sub { font-size: 15px; color: #7C8DB5; margin-bottom: 6px; }
+.rp-sub strong { color: #2563EB; }
+.rp-service { font-size: 13px; color: #94A3B8; margin-bottom: 28px; }
+
+/* ── כוכבים ── */
+.rp-stars { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.starBtn {
+  background: none; border: none; cursor: pointer; padding: 4px;
+  transition: transform .15s;
+  transform: scale(1);
+}
+.starBtn--active { transform: scale(1.1); }
+.starBtn svg { transition: all .2s; }
+
+.rp-label-row { height: 40px; display: flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+.rp-label { animation: fadeUp .2s; display: flex; align-items: center; gap: 8px; }
+.rp-label-emoji { font-size: 28px; }
+.rp-label-text { font-size: 18px; font-weight: 700; font-family: 'Outfit'; }
+
+/* ── תיבת הביקורת ── */
+.rp-comment { margin-bottom: 24px; animation: fadeUp .3s; }
+.rp-comment-label { display: block; font-size: 13px; font-weight: 600; color: #475569; margin-bottom: 8px; }
+.rp-textarea {
+  width: 100%; padding: 14px 16px; border-radius: 14px;
+  border: 2px solid #E8ECF4; background: #F8FAFF;
+  font-size: 14px; font-family: 'DM Sans', sans-serif;
+  color: #1A2B4A; resize: vertical; outline: none;
+  transition: border-color .2s, background .2s;
+  direction: inherit;
+  line-height: 1.6; min-height: 90px;
+}
+.rp-page[dir="rtl"] .rp-textarea { font-family: 'Heebo', 'DM Sans', sans-serif; }
+.rp-textarea:focus { border-color: #2563EB; background: #FFF; }
+.rp-counter-row { display: flex; justify-content: space-between; margin-top: 6px; }
+.rp-hint { font-size: 11px; color: #94A3B8; }
+.rp-counter { font-size: 11px; color: #94A3B8; }
+.rp-counter--warn { color: #EF4444; }
+
+/* ── כפתור שיפור הניסוח ── */
+.rp-ai-btn {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  width: 100%; margin-top: 12px; padding: 11px 16px; border-radius: 12px;
+  border: 2px solid #E0E7FF;
+  background: linear-gradient(135deg,#EEF2FF,#F5F3FF);
+  color: #4F46E5; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: 'DM Sans', sans-serif;
+  transition: all .2s;
+}
+.rp-page[dir="rtl"] .rp-ai-btn { font-family: 'Heebo', 'DM Sans', sans-serif; }
+.rp-ai-btn:disabled { cursor: wait; opacity: .7; }
+.rp-spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid #A5B4FC; border-top-color: #4F46E5;
+  border-radius: 50%;
+  animation: spin .8s linear infinite;
+}
+
+/* ── פאנל ההצעה ── */
+.rp-suggestion {
+  margin-top: 14px; padding: 16px; border-radius: 16px;
+  border: 2px solid #C7D2FE;
+  background: linear-gradient(135deg,#EEF2FF,#FFF);
+  animation: fadeUp .3s;
+}
+.rp-suggestion-head { display: flex; align-items: center; gap: 6px; margin-bottom: 10px; }
+.rp-suggestion-title { font-size: 13px; font-weight: 700; color: #4F46E5; }
+.rp-suggestion-text {
+  font-size: 14px; color: #1A2B4A; line-height: 1.7; margin-bottom: 14px;
+  background: #FFF; border-radius: 10px; padding: 12px 14px;
+  border: 1px solid #E0E7FF;
+  font-family: 'DM Sans', sans-serif;
+}
+.rp-suggestion-text--he { direction: rtl; text-align: right; font-family: 'Heebo', 'DM Sans', sans-serif; }
+.rp-suggestion-text--en { direction: ltr; text-align: left; }
+.rp-suggestion-btns { display: flex; gap: 8px; }
+.rp-accept, .rp-reject {
+  flex: 1; padding: 10px; border-radius: 10px;
+  font-size: 13px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  transition: all .2s;
+}
+.rp-accept { border: none; background: #4F46E5; color: #FFF; font-weight: 700; }
+.rp-reject { border: 2px solid #E2E8F0; background: #FFF; color: #64748B; font-weight: 600; }
+
+/* ── שליחה ── */
+.rp-err { color: #DC2626; font-size: 13px; font-weight: 600; margin-bottom: 10px; text-align: center; }
+.rp-submit {
+  width: 100%; padding: 16px; border-radius: 14px; border: none;
+  background: #E2E8F0; color: #94A3B8;
+  font-size: 17px; font-weight: 700; font-family: 'Outfit';
+  cursor: not-allowed; transition: all .3s; margin-bottom: 12px;
+}
+.rp-submit--on {
+  background: linear-gradient(135deg,#2563EB,#1D4ED8);
+  color: #FFF; cursor: pointer;
+  box-shadow: 0 8px 30px rgba(37,99,235,.3);
+}
+.rp-submit:disabled { opacity: .7; cursor: not-allowed; }
+.rp-skip {
+  background: none; border: none; cursor: pointer;
+  font-size: 14px; color: #94A3B8; font-weight: 500; padding: 8px;
+}

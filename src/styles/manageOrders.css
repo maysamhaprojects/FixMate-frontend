@@ -1,0 +1,220 @@
+/* ============================================================
+ *  FixMate — עיצוב מסך ניהול ההזמנות
+ *  חולץ מ-ManageOrders.jsx (ה-<style> הפנימי + inline styles).
+ *  התחילית mo- מונעת התנגשות עם שאר קבצי העיצוב.
+ *  שימוש:  import "../styles/manageOrders.css";
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Outfit:wght@600;700;800&family=Heebo:wght@400;500;600;700&display=swap');
+
+@keyframes fadeUp { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes popIn  { from { opacity: 0; transform: scale(.93); }      to { opacity: 1; transform: scale(1); } }
+
+/* ── עמוד ── */
+.mo-page { background: #F5F7FB; min-height: 100vh; transition: opacity .4s; }
+.mo-page * { box-sizing: border-box; margin: 0; }
+.mo-page ::-webkit-scrollbar { width: 5px; }
+.mo-page ::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 4px; }
+
+/* ════════ NAVBAR ════════ */
+.mo-nav {
+  background: #FFF;
+  border-bottom: 1px solid #E8ECF4;
+  box-shadow: 0 1px 10px rgba(0,0,0,.04);
+  position: sticky; top: 0; z-index: 100;
+}
+.mo-nav-inner {
+  max-width: 1160px; margin: 0 auto;
+  padding: 13px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+  direction: ltr;
+}
+.mo-logo { display: flex; align-items: center; gap: 10px; }
+.mo-logo-badge {
+  width: 36px; height: 36px; border-radius: 10px;
+  background: linear-gradient(135deg,#2563EB,#1D4ED8);
+  display: flex; align-items: center; justify-content: center;
+  color: #FFF;
+}
+.mo-logo-text { font-family: 'Outfit'; font-size: 19px; font-weight: 800; color: #1A2B4A; }
+.mo-logo-text b { color: #2563EB; font-weight: 800; }
+.mo-logo-tag { font-size: 12px; font-weight: 500; color: #94A3B8; }
+.mo-back-btn {
+  display: flex; align-items: center; gap: 6px;
+  padding: 9px 18px; border-radius: 22px;
+  border: 1.5px solid #E2E8F0; background: #FFF;
+  color: #64748B; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ════════ MAIN ════════ */
+.mo-main { max-width: 1160px; margin: 0 auto; padding: 30px 28px 60px; }
+
+/* כותרת + חיפוש */
+.top-row {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 24px; gap: 14px;
+  animation: fadeUp .35s;
+}
+.mo-title { font-family: 'Outfit'; font-size: 27px; font-weight: 800; color: #1A2B4A; margin-bottom: 3px; }
+.mo-subtitle { font-size: 14px; color: #94A3B8; }
+.mo-search-wrap { position: relative; }
+.mo-search-ico {
+  position: absolute; top: 50%; transform: translateY(-50%);
+  color: #94A3B8; pointer-events: none;
+}
+.mo-search {
+  border-radius: 22px;
+  border: 1.5px solid #E2E8F0; background: #FFF;
+  font-size: 13px; color: #1A2B4A;
+  outline: none; width: 230px; font-family: inherit;
+}
+/* הריפוד מתהפך לפי כיוון השפה כדי לפנות מקום לאייקון החיפוש */
+[dir="ltr"] .mo-search { padding: 10px 16px 10px 38px; }
+[dir="rtl"] .mo-search { padding: 10px 38px 10px 16px; }
+[dir="ltr"] .mo-search-ico { left: 13px; }
+[dir="rtl"] .mo-search-ico { right: 13px; }
+
+/* ── פילטרים ── */
+.mo-filters { display: flex; gap: 8px; margin-bottom: 28px; flex-wrap: wrap; animation: fadeUp .4s; }
+.flt-btn {
+  display: flex; align-items: center; gap: 7px;
+  padding: 8px 16px; border-radius: 22px;
+  border: 1.5px solid #E2E8F0; background: #FFF;
+  color: #64748B; font-size: 13px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+  transition: all .18s;
+}
+.flt-btn:hover { opacity: .82; }
+.flt-btn--active { border: none; color: #FFF; }
+.mo-flt-dot { width: 7px; height: 7px; border-radius: 50%; }
+.mo-flt-count {
+  font-size: 11px; font-weight: 700;
+  background: #F1F5F9; color: #64748B;
+  border-radius: 10px; padding: 1px 7px;
+}
+.flt-btn--active .mo-flt-count { background: rgba(255,255,255,.2); color: #FFF; }
+
+/* ── מצב ריק ── */
+.mo-empty {
+  text-align: center; padding: 70px 20px;
+  background: #FFF; border-radius: 22px; border: 1px solid #E8ECF4;
+  animation: fadeUp .4s;
+}
+.mo-empty-emoji { font-size: 50px; margin-bottom: 14px; }
+.mo-empty-title { font-size: 17px; font-weight: 700; color: #1A2B4A; margin-bottom: 6px; }
+.mo-empty-sub { font-size: 14px; color: #94A3B8; }
+
+/* ════════ כרטיסי הזמנה ════════ */
+.cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 18px; }
+.order-card {
+  border-radius: 20px; overflow: hidden;
+  border: 1px solid #E8ECF4;
+  box-shadow: 0 2px 16px rgba(0,0,0,.04);
+  transition: transform .22s ease, box-shadow .22s ease;
+}
+.order-card:hover { transform: translateY(-4px); box-shadow: 0 16px 40px rgba(0,0,0,.11); }
+.mo-card-bar { height: 5px; }
+.mo-card-body { padding: 20px 20px 18px; }
+
+.mo-card-top { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; gap: 10px; }
+.mo-card-who { display: flex; align-items: center; gap: 11px; }
+.mo-avatar {
+  width: 42px; height: 42px; border-radius: 12px;
+  background: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit'; font-weight: 800; font-size: 17px;
+  flex-shrink: 0;
+}
+.mo-client { font-size: 15px; font-weight: 700; color: #1A2B4A; margin-bottom: 2px; }
+.mo-order-id { font-size: 11px; color: #94A3B8; font-weight: 500; }
+
+.mo-tag {
+  display: flex; align-items: center; gap: 5px;
+  font-size: 11px; font-weight: 700;
+  border-radius: 20px; padding: 5px 12px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.mo-tag-dot { width: 6px; height: 6px; border-radius: 50%; }
+
+.mo-service { font-size: 15px; font-weight: 700; color: #1A2B4A; margin-bottom: 5px; }
+.mo-desc { font-size: 13px; color: #64748B; line-height: 1.65; margin-bottom: 14px; }
+
+/* סיבת ביטול */
+.mo-cancel-box {
+  display: flex; gap: 8px;
+  background: #FEF2F2; border: 1px solid #FECACA;
+  border-radius: 10px; padding: 10px 12px; margin-bottom: 14px;
+}
+.mo-cancel-label { color: #DC2626; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.mo-cancel-text { font-size: 13px; color: #991B1B; line-height: 1.5; }
+
+/* מטא-דאטה */
+.mo-meta {
+  display: flex; flex-wrap: wrap; gap: 12px;
+  font-size: 12px; color: #94A3B8;
+  margin-bottom: 14px; padding-bottom: 14px;
+  border-bottom: 1px dashed #E2E8F0;
+}
+.mo-meta-item { display: flex; align-items: center; gap: 4px; }
+.mo-price { font-weight: 700; color: #059669; font-size: 13px; }
+
+/* שורה תחתונה */
+.mo-card-foot { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; }
+.mo-call-btn {
+  display: flex; align-items: center; gap: 5px;
+  padding: 7px 14px; border-radius: 20px;
+  border: 1.5px solid #E2E8F0; background: #FFF;
+  color: #2563EB; font-size: 12px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.mo-actions { display: flex; gap: 7px; }
+.act-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 8px 16px; border-radius: 20px;
+  font-size: 13px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+  transition: all .18s;
+}
+.act-btn:hover { filter: brightness(1.08); transform: translateY(-1px); }
+.mo-done-note { font-size: 12px; color: #94A3B8; font-style: italic; align-self: center; }
+
+/* ════════ מודל אישור ════════ */
+.mo-overlay {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.5);
+  backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 300; padding: 20px;
+}
+.mo-modal {
+  background: #FFF; border-radius: 26px;
+  padding: 38px 32px 32px;
+  max-width: 400px; width: 100%;
+  text-align: center;
+  animation: popIn .22s;
+  box-shadow: 0 24px 60px rgba(0,0,0,.18);
+}
+.mo-modal-emoji { font-size: 52px; margin-bottom: 14px; }
+.mo-modal-title { font-family: 'Outfit'; font-size: 20px; font-weight: 800; color: #1A2B4A; margin-bottom: 8px; }
+.mo-modal-line { font-size: 14px; color: #64748B; margin-bottom: 4px; }
+.mo-modal-when { font-size: 13px; color: #94A3B8; margin-bottom: 28px; }
+.mo-modal-btns { display: flex; gap: 10px; }
+.mo-modal-cancel {
+  flex: 1; padding: 13px; border-radius: 14px;
+  border: 1.5px solid #E2E8F0; background: #FFF;
+  color: #64748B; font-size: 14px; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+.mo-modal-ok {
+  flex: 1; padding: 13px; border-radius: 14px;
+  border: none; color: #FFF;
+  font-size: 14px; font-weight: 700;
+  cursor: pointer; font-family: inherit;
+}
+
+/* ════════ רספונסיבי ════════ */
+@media (max-width: 640px) {
+  .cards-grid { grid-template-columns: 1fr; }
+  .top-row { flex-direction: column; align-items: flex-start; }
+}

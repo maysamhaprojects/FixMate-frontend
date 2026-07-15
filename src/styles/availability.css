@@ -1,0 +1,128 @@
+/* ============================================================
+ *  FixMate — עיצוב מסך הזמינות השבועית
+ *  חולץ מ-ProAvailability.jsx.
+ *  התחילית av- מונעת התנגשות עם שאר קבצי העיצוב.
+ *  שימוש:  import "../styles/availability.css";
+ * ============================================================ */
+
+@keyframes popIn { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+
+/* ── עמוד ── */
+.av-page {
+  min-height: 100vh;
+  background: #F4F6FB;
+  font-family: 'DM Sans', sans-serif;
+  transition: opacity .35s;
+}
+
+/* ── ניווט עליון ── */
+.av-nav {
+  background: #FFF;
+  border-bottom: 1px solid #EAEEF5;
+  padding: 0 24px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.av-back {
+  display: flex; align-items: center; gap: 8px;
+  border: none; background: none; cursor: pointer;
+  color: #2563EB; font-size: 15px; font-weight: 600; font-family: inherit;
+}
+.av-logo { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; color: #1A2B4A; }
+.av-logo b { color: #4F6AFF; font-weight: 800; }
+.av-nav-spacer { width: 90px; }
+
+/* ── תוכן ── */
+.av-wrap { max-width: 680px; margin: 0 auto; padding: 32px 20px 60px; }
+.av-head { margin-bottom: 24px; }
+.av-title { font-family: 'Outfit', sans-serif; font-size: 26px; font-weight: 800; color: #1A2B4A; margin-bottom: 4px; }
+.av-sub { font-size: 15px; color: #94A3B8; }
+
+/* ── שורות הימים ── */
+.av-card {
+  background: #FFF; border-radius: 20px;
+  border: 1px solid #EAEEF5;
+  box-shadow: 0 2px 16px rgba(15,23,42,.04);
+  overflow: hidden;
+}
+.av-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 22px;
+  border-bottom: 1px solid #F1F5F9;
+  flex-wrap: wrap;
+}
+.av-row:last-child { border-bottom: none; }
+.av-day { display: flex; align-items: center; gap: 12px; min-width: 130px; }
+
+/* מתג הפעלה/כיבוי */
+.av-toggle {
+  width: 44px; height: 26px; border-radius: 20px;
+  border: none; cursor: pointer; padding: 3px;
+  background: #CBD5E1;
+  transition: background .2s;
+  display: flex; justify-content: flex-start;
+}
+.av-toggle--on { background: #4F6AFF; justify-content: flex-end; }
+.av-toggle span {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: #FFF; display: block;
+  box-shadow: 0 1px 3px rgba(0,0,0,.2);
+}
+.av-day-name { font-size: 15px; font-weight: 700; color: #94A3B8; }
+.av-day-name--on { color: #1A2B4A; }
+
+/* טווח שעות */
+.av-times { display: flex; align-items: center; gap: 8px; flex: 1; justify-content: flex-end; }
+.av-time-input {
+  border: 1.5px solid #E8ECF4; border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 14px; font-family: inherit; color: #1A2B4A;
+  outline: none; background: #F8FAFF;
+}
+.av-dash { color: #94A3B8; }
+.av-off { flex: 1; text-align: end; font-size: 13px; color: #CBD5E1; font-weight: 500; }
+
+/* ── שמירה ── */
+.av-save {
+  width: 100%; height: 52px; margin-top: 22px;
+  border-radius: 14px; border: none; cursor: pointer;
+  font-family: inherit; font-size: 15px; font-weight: 700; color: #FFF;
+  background: linear-gradient(135deg,#4F6AFF,#3B4FE0);
+  box-shadow: 0 6px 18px rgba(79,106,255,.3);
+}
+.av-save:disabled { cursor: default; opacity: .7; }
+
+/* ── מודל הצלחה ── */
+.av-success-root {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  z-index: 1100;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.av-success {
+  background: #FFF; border-radius: 20px;
+  padding: 34px 40px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.3);
+  max-width: 360px;
+  animation: popIn .25s ease;
+}
+.av-success-check {
+  width: 66px; height: 66px; border-radius: 50%;
+  background: #ECFDF5;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.av-success-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: #1A2B4A; margin-bottom: 6px; }
+.av-success-sub { font-size: 14px; color: #94A3B8; }
+
+/* ── טוסט ── */
+.av-toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  z-index: 1000;
+  background: #059669; color: #FFF;
+  padding: 13px 24px; border-radius: 12px;
+  font-size: 14px; font-weight: 600;
+  box-shadow: 0 10px 30px rgba(0,0,0,.2);
+}
+.av-toast--err { background: #DC2626; }

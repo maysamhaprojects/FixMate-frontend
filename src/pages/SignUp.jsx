@@ -32,444 +32,60 @@
  * =============================================
  */
 
-import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { useLang } from "../context/LanguageContext";
+import { useSignUp } from "../hooks/useSignUp";
 import { COUNTRIES } from "../data/countries";
-import { ISRAEL_CITIES } from "../data/israelCities";
-import { apiFetch } from "../services/api";
 import { IconUser, IconMail, IconLock, IconPhone, IconMapPin, IconDollar, IconEye, IconEyeOff, IconWrench, IconHome, IconArrowLeft, IconArrowRight, IconSpinner, IconCheckCircle } from "../components/AuthIcons";
+import { SERVICE_CATEGORIES } from "../data/serviceCategories";
+import { LEGAL_TERMS, LEGAL_PRIVACY } from "../data/legalContent";
 
-/* ─────────────────────────────────────────────
-   SVG Icon Components
-   ───────────────────────────────────────────── */
+/*
+  אייקונים    → components/AuthIcons.jsx
+  לוגיקה      → hooks/useSignUp.js
+  קטגוריות    → data/serviceCategories.js
+  תוכן משפטי  → data/legalContent.js
+*/
 
-/** User icon — full name input */
-
-/* ─────────────────────────────────────────────
-   Available service categories for Professionals
-   These come from the backend in production.
-   🔗 GET /api/categories
-   ───────────────────────────────────────────── */
-const SERVICE_CATEGORIES = [
-  { id: "electrical", label: "Electrical", he: "חשמל", icon: "⚡" },
-  { id: "plumbing", label: "Plumbing", he: "שרברבות", icon: "🔧" },
-  { id: "ac", label: "AC / HVAC", he: "מזגנים", icon: "❄️" },
-  { id: "painting", label: "Painting", he: "צביעה", icon: "🎨" },
-  { id: "carpentry", label: "Carpentry", he: "נגרות", icon: "🪚" },
-  { id: "cleaning", label: "Cleaning", he: "ניקיון", icon: "🧹" },
-  { id: "locksmith", label: "Locksmith", he: "מנעולן", icon: "🔑" },
-  { id: "appliances", label: "Appliances", he: "מכשירי חשמל", icon: "🔌" },
-];
-
-
-/* ─────────────────────────────────────────────
-   תוכן משפטי — תנאי שימוש ומדיניות פרטיות
-   ───────────────────────────────────────────── */
-const LEGAL_TERMS = [
-  {
-    titleHe: "1. קבלת התנאים",
-    titleEn: "1. Acceptance of Terms",
-    bodyHe: "השימוש בפלטפורמת FixMate מהווה הסכמה מלאה לתנאי שימוש אלה. אם אינך מסכים לתנאים, אנא הימנע משימוש בשירות.",
-    bodyEn: "By using the FixMate platform you fully accept these Terms of Service. If you do not agree, please refrain from using the service.",
-  },
-  {
-    titleHe: "2. אופי השירות",
-    titleEn: "2. Nature of the Service",
-    bodyHe: "FixMate היא פלטפורמה המקשרת בין לקוחות לבין בעלי מקצוע בתחום שירותי הבית. FixMate אינה צד להתקשרות בין הלקוח לבעל המקצוע ואינה מספקת את השירותים בעצמה.",
-    bodyEn: "FixMate is a platform connecting clients with home-service professionals. FixMate is not a party to the engagement between client and professional and does not provide the services itself.",
-  },
-  {
-    titleHe: "3. חשבון משתמש",
-    titleEn: "3. User Account",
-    bodyHe: "עליך לספק מידע מדויק ומעודכן בעת ההרשמה, ולשמור על סודיות פרטי ההתחברות שלך. אתה אחראי לכל פעילות המתבצעת בחשבונך. חשבונות בעלי מקצוע כפופים לאישור מנהל.",
-    bodyEn: "You must provide accurate, up-to-date information upon registration and keep your login credentials confidential. You are responsible for all activity under your account. Professional accounts are subject to admin approval.",
-  },
-  {
-    titleHe: "4. אחריות בעלי המקצוע",
-    titleEn: "4. Professional Responsibility",
-    bodyHe: "בעלי המקצוע אחראים באופן בלעדי לאיכות עבודתם, לרישיונות ולביטוחים הנדרשים בחוק. FixMate אינה ערבה לטיב השירות.",
-    bodyEn: "Professionals are solely responsible for the quality of their work and for holding the licenses and insurance required by law. FixMate does not guarantee service quality.",
-  },
-  {
-    titleHe: "5. תשלומים ודירוגים",
-    titleEn: "5. Payments & Ratings",
-    bodyHe: "מחירים מוצגים על ידי בעלי המקצוע. דירוגים וביקורות משקפים את דעת המשתמשים בלבד. אין להזין ביקורות כוזבות או פוגעניות.",
-    bodyEn: "Prices are set by professionals. Ratings and reviews reflect users' opinions only. Submitting false or abusive reviews is prohibited.",
-  },
-  {
-    titleHe: "6. הגבלת אחריות",
-    titleEn: "6. Limitation of Liability",
-    bodyHe: "FixMate לא תישא באחריות לנזק ישיר או עקיף הנובע משימוש בשירות או מהתקשרות עם בעל מקצוע. השימוש בפלטפורמה הוא על אחריות המשתמש בלבד.",
-    bodyEn: "FixMate shall not be liable for any direct or indirect damage arising from use of the service or engagement with a professional. Use of the platform is at your own risk.",
-  },
-];
-
-const LEGAL_PRIVACY = [
-  {
-    titleHe: "1. איזה מידע אנו אוספים",
-    titleEn: "1. Information We Collect",
-    bodyHe: "אנו אוספים מידע שתמסור בעת ההרשמה: שם מלא, אימייל, מספר טלפון, כתובת/עיר, ולבעלי מקצוע — קטגוריות שירות, טווח מחירים ותיאור.",
-    bodyEn: "We collect information you provide upon registration: full name, email, phone number, address/city, and for professionals — service categories, price range and description.",
-  },
-  {
-    titleHe: "2. כיצד אנו משתמשים במידע",
-    titleEn: "2. How We Use Information",
-    bodyHe: "המידע משמש לניהול חשבונך, לקישור בין לקוחות לבעלי מקצוע, לשיפור השירות ולתקשורת איתך בנוגע להזמנות ולעדכונים.",
-    bodyEn: "The information is used to manage your account, connect clients with professionals, improve the service, and communicate with you about bookings and updates.",
-  },
-  {
-    titleHe: "3. שיתוף מידע",
-    titleEn: "3. Information Sharing",
-    bodyHe: "לא נמכור את המידע האישי שלך לצדדים שלישיים. פרטים רלוונטיים (כגון שם וטלפון) עשויים להיות משותפים בין לקוח לבעל מקצוע לצורך ביצוע השירות בלבד.",
-    bodyEn: "We will not sell your personal information to third parties. Relevant details (such as name and phone) may be shared between client and professional solely to perform the service.",
-  },
-  {
-    titleHe: "4. אבטחת מידע",
-    titleEn: "4. Data Security",
-    bodyHe: "סיסמאות נשמרות בצורה מוצפנת. אנו נוקטים באמצעים סבירים להגנה על המידע, אך לא ניתן להבטיח אבטחה מוחלטת ברשת.",
-    bodyEn: "Passwords are stored encrypted. We take reasonable measures to protect your data, but no method of transmission over the internet is completely secure.",
-  },
-  {
-    titleHe: "5. זכויותיך",
-    titleEn: "5. Your Rights",
-    bodyHe: "באפשרותך לצפות, לעדכן או למחוק את פרטיך האישיים בכל עת דרך הגדרות החשבון או בפנייה אלינו.",
-    bodyEn: "You may view, update or delete your personal details at any time via your account settings or by contacting us.",
-  },
-  {
-    titleHe: "6. יצירת קשר",
-    titleEn: "6. Contact Us",
-    bodyHe: "לשאלות בנוגע לפרטיות ניתן לפנות אלינו בכתובת support@fixmate.co.il.",
-    bodyEn: "For any privacy-related questions, contact us at support@fixmate.co.il.",
-  },
-];
-
-
-/* =============================================
- *  MAIN COMPONENT: SignUp
- * ============================================= */
 export default function SignUp() {
   /* ─── Navigation hook for page transitions ─── */
   const navigate = useNavigate();
   const { lang, dir } = useLang();
   const isHe = lang === "he";
-  const [step, setStep] = useState(1);
-
-  /* ─── Form Data ─── */
-  const [role, setRole] = useState("");
-  const [fullName, setFullName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [phone, setPhone] = useState("");
-  const [phoneCountry, setPhoneCountry] = useState(COUNTRIES[0]); // ברירת מחדל: ישראל
-  const [phoneDdOpen, setPhoneDdOpen] = useState(false);
-  const [countrySearch, setCountrySearch] = useState("");
-  const [address, setAddress] = useState("");
-  const [addrOpen, setAddrOpen] = useState(false);
-  const [avatar, setAvatar] = useState(null);
-  const [avatarPreview, setAvatarPreview] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-
-  /* ─── Professional-Only Fields ─── */
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [serviceRadius, setServiceRadius] = useState("10");
-  const [priceMin, setPriceMin] = useState("");
-  const [priceMax, setPriceMax] = useState("");
-  const [bio, setBio] = useState("");
-  const [yearsExp, setYearsExp] = useState("");
-  const [docs, setDocs] = useState([]); // [{ name, data(base64) }]
-
-  /* ─── UI State ─── */
-  const [isLoading, setIsLoading] = useState(false);
-  const [mounted, setMounted] = useState(false);
-  const [errors, setErrors] = useState({});
-  const [shakeError, setShakeError] = useState(false);
-  const [focusedField, setFocusedField] = useState(null);
-  const [agreeTerms, setAgreeTerms] = useState(false);
-  const [legalModal, setLegalModal] = useState(null); // null | "terms" | "privacy"
-
-  /* Trigger entrance animation on mount */
-  useEffect(() => {
-    const timer = setTimeout(() => setMounted(true), 50);
-    return () => clearTimeout(timer);
-  }, []);
-
-  /* Scroll to top when step changes */
-  useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  }, [step]);
-
-  /* סינון ערי ישראל לפי מה שהוקלד (עברית או אנגלית) — מיידי, מהרשימה המקומית */
-  const cityMatches = (() => {
-    if (!addrOpen) return [];
-    const q = address.trim().toLowerCase();
-    if (!q) return [];
-    return ISRAEL_CITIES.filter(
-      (c) => c.he.includes(address.trim()) || c.en.toLowerCase().includes(q)
-    ).slice(0, 12);
-  })();
-
-  /**
-   * handleDocsChange — קריאת מסמכים שהועלו והמרתם ל-base64
-   */
-  const handleDocsChange = (e) => {
-    const files = Array.from(e.target.files || []);
-    files.forEach((file) => {
-      if (file.size > 3 * 1024 * 1024) {
-        setErrors((p) => ({ ...p, docs: isHe ? "כל קובץ חייב להיות עד 3MB" : "Each file must be under 3MB" }));
-        return;
-      }
-      const reader = new FileReader();
-      reader.onloadend = () => setDocs((prev) => [...prev, { name: file.name, data: reader.result }]);
-      reader.readAsDataURL(file);
-    });
-    if (errors.docs) setErrors((p) => ({ ...p, docs: null }));
-    e.target.value = "";
-  };
-  const removeDoc = (idx) => setDocs((prev) => prev.filter((_, i) => i !== idx));
-
-  /**
-   * toggleCategory — Add/remove a category from selection
-   */
-  const toggleCategory = (categoryId) => {
-    setSelectedCategories((prev) =>
-      prev.includes(categoryId)
-        ? prev.filter((c) => c !== categoryId)
-        : [...prev, categoryId]
-    );
-    if (errors.categories) setErrors((prev) => ({ ...prev, categories: null }));
-  };
-
-  /**
-   * handleAvatarChange — Handle profile image upload
-   */
-  const handleAvatarChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      if (file.size > 5 * 1024 * 1024) {
-        setErrors((prev) => ({ ...prev, avatar: "Image must be under 5MB" }));
-        return;
-      }
-      setAvatar(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setAvatarPreview(reader.result);
-      reader.readAsDataURL(file);
-      if (errors.avatar) setErrors((prev) => ({ ...prev, avatar: null }));
-    }
-  };
-
-  const removeAvatar = () => {
-    setAvatar(null);
-    setAvatarPreview(null);
-  };
-
-  /* ─────────────────────────────────────────────
-     בדיקת חוזק סיסמה — מחזיר אילו תנאים מולאו
-     ───────────────────────────────────────────── */
-  const COMMON_PASSWORDS = ["12345678", "password", "password1", "12345678910", "qwerty123", "123456789", "1234567890"];
-  const getPasswordChecks = (pw) => ({
-    length:    pw.length >= 8,
-    upper:     /[A-Z]/.test(pw),
-    lower:     /[a-z]/.test(pw),
-    number:    /[0-9]/.test(pw),
-    special:   /[!@#$%^&*]/.test(pw),
-    notCommon: pw.length > 0 && !COMMON_PASSWORDS.includes(pw.toLowerCase()),
-  });
-  const passwordChecks = getPasswordChecks(password);
-  const isPasswordStrong = Object.values(passwordChecks).every(Boolean);
-
-  /**
-   * validateStep2 — Validate personal details fields
-   */
-  const validateStep2 = () => {
-    const newErrors = {};
-    if (!fullName.trim()) newErrors.fullName = isHe ? "שם מלא נדרש" : "Full name is required";
-    if (!email.trim()) {
-      newErrors.email = isHe ? "אימייל נדרש" : "Email is required";
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      newErrors.email = isHe ? "אנא הזינו אימייל תקין" : "Please enter a valid email";
-    }
-    if (!password) {
-      newErrors.password = isHe ? "סיסמה נדרשת" : "Password is required";
-    } else if (!isPasswordStrong) {
-      newErrors.password = isHe
-        ? "הסיסמה אינה עומדת בכל התנאים"
-        : "Password does not meet all requirements";
-    }
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = isHe ? "הסיסמאות לא תואמות" : "Passwords do not match";
-    }
-    const localPhone = phone.replace(/^0+/, ""); // מסירים 0 מוביל אם הוזן
-    if (!phone.trim()) {
-      newErrors.phone = isHe ? "מספר טלפון נדרש" : "Phone number is required";
-    } else if (localPhone.length !== phoneCountry.len) {
-      newErrors.phone = isHe
-        ? `נדרשות ${phoneCountry.len} ספרות עבור ${phoneCountry.he}`
-        : `${phoneCountry.len} digits required for ${phoneCountry.en}`;
-    }
-    if (!address.trim()) newErrors.address = isHe ? "כתובת נדרשת" : "Address is required";
-    if (!agreeTerms) newErrors.terms = isHe ? "יש לאשר את התנאים" : "You must agree to the terms";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * validateStep3 — Validate professional-only fields
-   */
-  const validateStep3 = () => {
-    const newErrors = {};
-    if (selectedCategories.length === 0) newErrors.categories = isHe ? "בחרו לפחות קטגוריה אחת" : "Select at least one service category";
-    if (!priceMin || !priceMax) newErrors.price = isHe ? "\u05d0\u05e0\u05d0 \u05d4\u05d2\u05d3\u05d9\u05e8\u05d5 \u05d8\u05d5\u05d5\u05d7 \u05de\u05d7\u05d9\u05e8\u05d9\u05dd" : "Please set your price range";
-    if (!bio.trim()) newErrors.bio = isHe ? "\u05d0\u05e0\u05d0 \u05db\u05ea\u05d1\u05d5 \u05e7\u05e6\u05ea \u05e2\u05dc \u05e2\u05e6\u05de\u05db\u05dd" : "Please write a short bio";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-
-  /**
-   * handleNext — Move to the next step after validation
-   */
-  const handleNext = () => {
-    if (step === 1) {
-      if (!role) {
-        setErrors({ role: isHe ? "אנא בחרו תפקיד" : "Please choose a role" });
-        setShakeError(true);
-        setTimeout(() => setShakeError(false), 600);
-        return;
-      }
-      setErrors({});
-      setStep(2);
-    } else if (step === 2) {
-      if (!validateStep2()) {
-        setShakeError(true);
-        setTimeout(() => setShakeError(false), 600);
-        return;
-      }
-      if (role === "client") {
-        handleSubmit();
-      } else {
-        setErrors({});
-        setStep(3);
-      }
-    } else if (step === 3) {
-      if (!validateStep3()) {
-        setShakeError(true);
-        setTimeout(() => setShakeError(false), 600);
-        return;
-      }
-      handleSubmit();
-    }
-  };
-
-  /**
-   * handleBack — Go back one step
-   */
-  const handleBack = () => {
-    setErrors({});
-    setStep((prev) => prev - 1);
-  };
-
-  /**
-   * handleSubmit — Send registration data to the API
-   *
-   * 🔗 API: POST /api/auth/register
-   */
-  const handleSubmit = async () => {
-    setIsLoading(true);
-    try {
-      // ──────────────────────────────────────────
-      // TODO: Replace with actual API call:
-      //
-      // const body = { fullName, email, password, phone, address, role };
-      // if (role === 'professional') {
-      //   body.categories = selectedCategories;
-      //   body.serviceRadius = parseInt(serviceRadius);
-      //   body.priceMin = parseInt(priceMin);
-      //   body.priceMax = parseInt(priceMax);
-      //   body.bio = bio;
-      // }
-      // const response = await fetch('/api/auth/register', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify(body),
-      // });
-      // const data = await response.json();
-      // if (!response.ok) throw new Error(data.message);
-      //
-      // 🚩 [PAYMENT-FLAG] Future: professionals → subscription page
-      // ──────────────────────────────────────────
-
-      // מרכיבים מספר בין-לאומי מלא: קידומת + מספר מקומי (בלי 0 מוביל)
-      const fullPhone = phoneCountry.dial + phone.replace(/^0+/, "");
-
-      // גוף הבקשה — בסיס לכולם, ולבעל מקצוע מוסיפים את פרטי המקצוע שנאספו
-      const body = {
-        fullName,
-        email,
-        password,
-        phone: fullPhone,
-        role: role.toUpperCase(),
-      };
-      if (role === 'professional') {
-        body.specialty = selectedCategories[0] || "";          // הקטגוריה הראשית (למשל plumbing)
-        body.location = address;                                 // העיר שנבחרה
-        body.hourlyRate = priceMin ? parseFloat(priceMin) : null; // מחיר מינימלי כמחיר לשעה
-        body.bio = bio;
-        body.yearsExperience = yearsExp !== "" ? parseInt(yearsExp) : null;
-        body.documents = docs.length > 0 ? JSON.stringify(docs) : null;
-      }
-
-      const response = await apiFetch('/api/auth/register', {
-        method: 'POST',
-        body: JSON.stringify(body),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
-      }
-
-      if (role === 'professional') {
-        navigate('/login', { state: { notice: 'נרשמת בהצלחה! החשבון שלך ממתין לאישור אדמין.' } });
-      } else {
-        localStorage.setItem('token', data.token);
-        localStorage.setItem('role', data.role);
-        localStorage.setItem('fullName', data.fullName);
-        setStep(4);
-      }
-    } catch (error) {
-      const msg = error.message || "";
-      if (msg === "Your account is pending admin approval") {
-        navigate('/login', { state: { notice: 'נרשמת בהצלחה! החשבון שלך ממתין לאישור אדמין.' } });
-        return;
-      }
-      // הודעה מדויקת לפי סוג השגיאה
-      let general = isHe ? "ההרשמה נכשלה. נסו שוב." : "Registration failed. Please try again.";
-      if (msg.indexOf("Email already exists") >= 0) {
-        general = isHe ? "האימייל הזה כבר רשום. נסו להתחבר או השתמשו באימייל אחר." : "This email is already registered. Try logging in or use another email.";
-      }
-      setErrors({ general });
-      setShakeError(true);
-      setTimeout(() => setShakeError(false), 600);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  /**
-   * getInputClass — Returns CSS classes for input container
-   */
-  const getInputClass = (fieldName) => {
-    let cls = "auth-input-container";
-    if (errors[fieldName]) cls += " auth-input-container--error";
-    if (focusedField === fieldName) cls += " auth-input-container--focused";
-    return cls;
-  };
-
-  const totalSteps = role === "professional" ? 3 : 2;
+  /* כל הלוגיקה מגיעה מ-hooks/useSignUp.js */
+  const {
+    step, setStep,
+    role, setRole,
+    fullName, setFullName,
+    email, setEmail,
+    password, setPassword,
+    confirmPassword, setConfirmPassword,
+    phone, setPhone,
+    phoneCountry, setPhoneCountry,
+    phoneDdOpen, setPhoneDdOpen,
+    countrySearch, setCountrySearch,
+    address, setAddress,
+    addrOpen, setAddrOpen,
+    cityMatches,
+    avatarPreview, handleAvatarChange, removeAvatar,
+    showPassword, setShowPassword,
+    showConfirm, setShowConfirm,
+    selectedCategories, toggleCategory,
+    serviceRadius, setServiceRadius,
+    priceMin, setPriceMin,
+    priceMax, setPriceMax,
+    bio, setBio,
+    yearsExp, setYearsExp,
+    docs, handleDocsChange, removeDoc,
+    isLoading, mounted, errors, setErrors, shakeError,
+    focusedField, setFocusedField,
+    agreeTerms, setAgreeTerms,
+    legalModal, setLegalModal,
+    passwordChecks, isPasswordStrong,
+    getInputClass, totalSteps,
+    handleNext, handleBack,
+  } = useSignUp({ isHe, navigate });
 
   return (
     <div className="auth-page" dir={dir}>

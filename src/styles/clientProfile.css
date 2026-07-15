@@ -1,0 +1,155 @@
+/* ============================================================
+ *  FixMate — עיצוב מסך פרופיל הלקוח
+ *  חולץ מ-ClientProfile.jsx.
+ *  התחילית cp- מונעת התנגשות עם שאר קבצי העיצוב.
+ *  שימוש:  import "../styles/clientProfile.css";
+ * ============================================================ */
+
+@keyframes popIn { from { opacity: 0; transform: scale(.9); } to { opacity: 1; transform: scale(1); } }
+
+/* ── עמוד ── */
+.cp-page {
+  min-height: 100vh;
+  background: #F4F6FB;
+  font-family: 'DM Sans', sans-serif;
+}
+
+/* ── ניווט עליון ── */
+.cp-nav {
+  background: #FFF;
+  border-bottom: 1px solid #EAEEF5;
+  padding: 0 24px;
+  height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.cp-back {
+  display: flex; align-items: center; gap: 8px;
+  border: none; background: none; cursor: pointer;
+  color: #2563EB; font-size: 15px; font-weight: 600; font-family: inherit;
+}
+.cp-logo { font-family: 'Outfit', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -0.5px; color: #1A2B4A; }
+.cp-logo b { color: #4F6AFF; font-weight: 800; }
+.cp-nav-spacer { width: 90px; }
+
+.cp-wrap { max-width: 640px; margin: 0 auto; padding: 32px 20px 60px; }
+
+/* ── כרטיס משותף ── */
+.cp-card {
+  background: #FFF; border-radius: 20px;
+  border: 1px solid #EAEEF5;
+  box-shadow: 0 2px 16px rgba(15,23,42,.04);
+}
+
+/* ── כרטיס הכותרת ── */
+.cp-header {
+  padding: 28px;
+  display: flex; align-items: center; gap: 20px;
+  margin-bottom: 24px;
+  flex-wrap: wrap;
+}
+.cp-avatar-wrap { position: relative; flex-shrink: 0; }
+.cp-avatar-label { cursor: pointer; display: block; }
+.cp-avatar {
+  width: 78px; height: 78px; border-radius: 50%; overflow: hidden;
+  background: linear-gradient(135deg,#4F6AFF,#7C3AED);
+  color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Outfit', sans-serif; font-size: 34px; font-weight: 800;
+  box-shadow: 0 6px 18px rgba(79,106,255,.35);
+}
+.cp-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.cp-avatar-cam {
+  position: absolute; bottom: 0; inset-inline-end: 0;
+  width: 26px; height: 26px; border-radius: 50%;
+  background: #2563EB; color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid #FFF;
+}
+.cp-id { min-width: 0; }
+.cp-name { font-family: 'Outfit', sans-serif; font-size: 24px; font-weight: 800; color: #1A2B4A; margin-bottom: 6px; }
+.cp-meta { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.cp-role-pill {
+  font-size: 12px; font-weight: 700;
+  padding: 4px 12px; border-radius: 20px;
+  background: #EEF2FF; color: #2563EB;
+}
+.cp-email { font-size: 13px; color: #94A3B8; }
+.cp-actions { margin-top: 8px; display: flex; gap: 14px; }
+.cp-link { font-size: 12.5px; font-weight: 600; color: #2563EB; cursor: pointer; }
+.cp-link--danger {
+  color: #EF4444; background: none; border: none;
+  cursor: pointer; font-family: inherit; padding: 0;
+  font-size: 12.5px; font-weight: 600;
+}
+
+/* ── כרטיס הפרטים ── */
+.cp-info { padding: 26px 28px; }
+.cp-info-title { font-family: 'Outfit', sans-serif; font-size: 17px; font-weight: 700; color: #1A2B4A; margin-bottom: 20px; }
+
+.cp-msg {
+  display: flex; align-items: center; gap: 8px;
+  padding: 12px 16px; margin-bottom: 20px;
+  border-radius: 12px; font-size: 14px; font-weight: 600;
+  background: #FEF2F2; border: 1.5px solid #FECACA; color: #991B1B;
+}
+.cp-msg--ok { background: #ECFDF5; border-color: #A7F3D0; color: #047857; }
+
+.cp-relogin {
+  width: 100%; height: 48px; border-radius: 12px; border: none;
+  cursor: pointer; font-family: inherit;
+  font-size: 15px; font-weight: 700; color: #FFF;
+  background: linear-gradient(135deg,#4F6AFF,#3B4FE0);
+  margin-bottom: 8px;
+}
+.cp-loading { text-align: center; color: #94A3B8; padding: 24px 0; }
+
+/* ── שדות ── */
+.cp-field { margin-bottom: 18px; }
+.cp-field--last { margin-bottom: 26px; }
+.cp-label { display: block; font-size: 13px; font-weight: 600; color: #64748B; margin-bottom: 8px; }
+.cp-box {
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 14px; height: 50px;
+  border-radius: 12px; border: 1.5px solid #E8ECF4;
+  background: #F8FAFF;
+  transition: border-color .15s;
+}
+.cp-box-ico { color: #94A3B8; display: flex; }
+.cp-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 15px; font-family: inherit; color: #1A2B4A;
+}
+
+.cp-save {
+  width: 100%; height: 52px; border-radius: 14px; border: none;
+  cursor: pointer; font-family: inherit;
+  font-size: 15px; font-weight: 700; color: #FFF;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  background: linear-gradient(135deg,#4F6AFF,#3B4FE0);
+  box-shadow: 0 6px 18px rgba(79,106,255,.3);
+}
+.cp-save:disabled { cursor: default; opacity: .7; }
+
+/* ── חלונית הצלחה ── */
+.cp-success-root {
+  position: fixed; inset: 0;
+  background: rgba(15,23,42,.45);
+  z-index: 1000;
+  display: flex; align-items: center; justify-content: center;
+  padding: 16px;
+}
+.cp-success {
+  background: #FFF; border-radius: 20px;
+  padding: 34px 40px; text-align: center;
+  box-shadow: 0 24px 60px rgba(0,0,0,.3);
+  max-width: 360px;
+  animation: popIn .25s ease;
+}
+.cp-success-check {
+  width: 66px; height: 66px; border-radius: 50%;
+  background: #ECFDF5;
+  display: flex; align-items: center; justify-content: center;
+  margin: 0 auto 16px;
+}
+.cp-success-title { font-family: 'Outfit', sans-serif; font-size: 20px; font-weight: 800; color: #1A2B4A; margin-bottom: 6px; }
+.cp-success-sub { font-size: 14px; color: #94A3B8; }

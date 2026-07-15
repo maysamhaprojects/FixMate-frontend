@@ -8,6 +8,7 @@
 
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { LanguageProvider } from "./context/LanguageContext";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 /* Pages */
 import LandingPage from "./pages/log";
@@ -30,20 +31,27 @@ export default function App() {
     <LanguageProvider>
       <BrowserRouter>
         <Routes>
+          {/* ── מסכים פתוחים לכולם ── */}
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<SignIn />} />
           <Route path="/register" element={<SignUp />} />
-          <Route path="/client/dashboard" element={<ClientDashboard />} />
-          <Route path="/client/profile" element={<ClientProfile />} />
-          <Route path="/client/search" element={<BookaPro />} />
-          <Route path="/client/snap" element={<SnapAnIssue />} />
-          <Route path="/client/mindmap" element={<MindMap />} />
-          <Route path="/client/rate" element={<RatePro />} />
-          <Route path="/pro/dashboard" element={<ProDashboard />} />
-          <Route path="/pro/profile" element={<ProProfile />} />
-          <Route path="/pro/orders" element={<ManageOrders />} />
-          <Route path="/pro/availability" element={<ProAvailability />} />
-          <Route path="/admin" element={<AdminDashboard />} />
+
+          {/* ── מסכי הלקוח ── (אדמין מורשה גם, לצורך בדיקה) */}
+          <Route path="/client/dashboard" element={<ProtectedRoute role={["CLIENT", "ADMIN"]}><ClientDashboard /></ProtectedRoute>} />
+          <Route path="/client/profile"   element={<ProtectedRoute role={["CLIENT", "ADMIN"]}><ClientProfile /></ProtectedRoute>} />
+          <Route path="/client/search"    element={<ProtectedRoute role={["CLIENT", "ADMIN"]}><BookaPro /></ProtectedRoute>} />
+          <Route path="/client/snap"      element={<ProtectedRoute role={["CLIENT", "ADMIN"]}><SnapAnIssue /></ProtectedRoute>} />
+          <Route path="/client/mindmap"   element={<ProtectedRoute role={["CLIENT", "ADMIN"]}><MindMap /></ProtectedRoute>} />
+          <Route path="/client/rate"      element={<ProtectedRoute role={["CLIENT", "ADMIN"]}><RatePro /></ProtectedRoute>} />
+
+          {/* ── מסכי בעל המקצוע ── */}
+          <Route path="/pro/dashboard"    element={<ProtectedRoute role={["PROFESSIONAL", "ADMIN"]}><ProDashboard /></ProtectedRoute>} />
+          <Route path="/pro/profile"      element={<ProtectedRoute role={["PROFESSIONAL", "ADMIN"]}><ProProfile /></ProtectedRoute>} />
+          <Route path="/pro/orders"       element={<ProtectedRoute role={["PROFESSIONAL", "ADMIN"]}><ManageOrders /></ProtectedRoute>} />
+          <Route path="/pro/availability" element={<ProtectedRoute role={["PROFESSIONAL", "ADMIN"]}><ProAvailability /></ProtectedRoute>} />
+
+          {/* ── מסך האדמין — לאדמין בלבד ── */}
+          <Route path="/admin" element={<ProtectedRoute role="ADMIN"><AdminDashboard /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
     </LanguageProvider>

@@ -5,6 +5,7 @@
  */
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/auth";
 import { useLang } from "../context/LanguageContext";
 import { apiFetch } from "../services/api";
 
@@ -202,7 +203,7 @@ export default function ClientProfile() {
           )}
 
           {needsLogin && (
-            <button onClick={() => navigate("/login")}
+            <button onClick={() => logout(navigate)}
               style={{ width: "100%", height: 48, borderRadius: 12, border: "none", cursor: "pointer", fontFamily: "inherit", fontSize: 15, fontWeight: 700, color: "#FFF", background: "linear-gradient(135deg,#4F6AFF,#3B4FE0)", marginBottom: 8 }}>
               {isHe ? "התחברות מחדש" : "Log in again"}
             </button>

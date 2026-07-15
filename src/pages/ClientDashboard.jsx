@@ -5,6 +5,7 @@
  */
 
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/auth";
 import { translate, getLang, getDir } from "../context/LanguageContext";
 import { useClientData } from "../hooks/useClientData";
 import { PREVIEW_COUNT, NOTIF_ICONS } from "../data/clientConstants";
@@ -126,14 +127,14 @@ export default function ClientDashboard() {
                       </button>
                     </div>
                     <div className="cd-profile-footer">
-                      <button className="cd-profile-logout" onClick={() => navigate("/login")}><IconLogout /><span>{t("cd_logout")}</span></button>
+                      <button className="cd-profile-logout" onClick={() => logout(navigate)}><IconLogout /><span>{t("cd_logout")}</span></button>
                     </div>
                   </div>
                 </>
               )}
             </div>
 
-            <button className="cd-nav-icon-btn cd-logout-btn" title={t("cd_logout")} onClick={() => navigate("/login")}><IconLogout /></button>
+            <button className="cd-nav-icon-btn cd-logout-btn" title={t("cd_logout")} onClick={() => logout(navigate)}><IconLogout /></button>
           </div>
         </div>
       </nav>

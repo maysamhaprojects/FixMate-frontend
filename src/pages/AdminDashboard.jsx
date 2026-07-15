@@ -16,6 +16,7 @@
  */
 
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/auth";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useAdminData } from "../hooks/useAdminData";
 import { IcoGrid, IcoUsers, IcoShield, IcoAlert, IcoClip, IcoDollar, IcoCheck, IcoX, IcoEye, IcoBan, IcoSearch, IcoLogout, IcoWrench, IcoChevR, IcoBack, IcoStar, IcoStarNav, IcoMail, IcoPhone, IcoRefresh } from "../components/AdminIcons";
@@ -114,7 +115,7 @@ export default function AdminDashboard() {
               <p className="admin-user-email">{me.email}</p>
             </div>
           </div>
-          <button onClick={() => navigate("/login")} className="hb admin-logout">
+          <button onClick={() => logout(navigate)} className="hb admin-logout">
             <IcoLogout /><span className="nav-label">{L("Sign Out", "יציאה")}</span>
           </button>
         </div>

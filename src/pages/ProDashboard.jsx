@@ -21,6 +21,7 @@
  */
 
 import { useNavigate } from "react-router-dom";
+import { logout } from "../services/auth";
 import { translate, getLang, getDir } from "../context/LanguageContext";
 import { useProData } from "../hooks/useProData";
 import { IconBell, IconLogout, IconWrench, IconStar, IconPhone, IconCalendar, IconDollar, IconInbox, IconMapPin, IconQuote } from "../components/ProIcons";
@@ -195,7 +196,7 @@ export default function ProDashboard() {
             </div>
 
             {/* יציאה */}
-            <button className="pro-icon-btn" onClick={() => navigate("/login")}>
+            <button className="pro-icon-btn" onClick={() => logout(navigate)}>
               <IconLogout />
             </button>
           </div>

@@ -99,7 +99,12 @@ export function useBooking({ t, lang, isHe, navigate }) {
             rating: p.totalRatings > 0 ? Number(p.averageRating).toFixed(1) : (isHe ? "חדש" : "New"),
             reviews: p.totalRatings || 0,
             city: p.location || "—",
-            price: p.hourlyRate != null ? String(p.hourlyRate) : "—",
+            // מחיר: טווח מ-min עד max, או מספר בודד אם אין מקסימום, או "—" אם אין כלל
+            price: p.hourlyRate != null
+              ? (p.hourlyRateMax != null && p.hourlyRateMax !== p.hourlyRate
+                  ? p.hourlyRate + "–" + p.hourlyRateMax
+                  : String(p.hourlyRate))
+              : "—",
             avatar,
             profilePicture: u.profilePicture || "",
             expYears: p.yearsExperience != null ? p.yearsExperience : "—",

@@ -66,7 +66,7 @@ export function useProProfile({ isHe }) {
         setBio(p.bio || "");
         setSpecialty(p.specialty || "");
         setMinPrice(p.hourlyRate != null ? p.hourlyRate : "");
-        setMaxPrice(p.hourlyRate != null ? p.hourlyRate : "");
+        setMaxPrice(p.hourlyRateMax != null ? p.hourlyRateMax : "");
         setYearsExp(p.yearsExperience != null ? p.yearsExperience : "");
         setRating(p.averageRating || 0);
         setReviewCount(p.totalRatings || 0);
@@ -129,6 +129,7 @@ export function useProProfile({ isHe }) {
           bio: bio || null,
           location: areas.map((a) => (isHe ? a.he : a.en)).join(", ") || null,
           hourlyRate: minPrice !== "" ? parseFloat(minPrice) : null,
+          hourlyRateMax: maxPrice !== "" ? parseFloat(maxPrice) : null,
           yearsExperience: yearsExp !== "" ? parseInt(yearsExp) : null,
         }),
       });

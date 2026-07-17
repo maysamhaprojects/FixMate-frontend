@@ -231,7 +231,8 @@ export function useSignUp({ isHe, navigate }) {
       if (role === "professional") {
         body.specialty = selectedCategories[0] || "";              // הקטגוריה הראשית (למשל plumbing)
         body.location = address;                                    // העיר שנבחרה
-        body.hourlyRate = priceMin ? parseFloat(priceMin) : null;   // מחיר מינימלי כמחיר לשעה
+        body.hourlyRate = priceMin ? parseFloat(priceMin) : null;      // תחתית הטווח
+        body.hourlyRateMax = priceMax ? parseFloat(priceMax) : null;   // ראש הטווח
         body.bio = bio;
         body.yearsExperience = yearsExp !== "" ? parseInt(yearsExp) : null;
         body.documents = docs.length > 0 ? JSON.stringify(docs) : null;

@@ -204,7 +204,9 @@ export default function AdminDashboard() {
                       </div>
                       <div style={{ textAlign: "end" }}>
                         <span className="admin-pill" style={{ background: st.bg, color: st.color }}>{L(o.status.replace("_", " "), o.status)}</span>
-                        <p className="admin-mini-price">₪{o.price}</p>
+                        {o.status === "done" && o.price != null && o.price > 0
+                          ? <p className="admin-mini-price">₪{o.price}</p>
+                          : <p className="admin-mini-price admin-mini-price--pending">{L("—", "—")}</p>}
                       </div>
                     </div>
                   );
@@ -476,7 +478,9 @@ export default function AdminDashboard() {
                       <p className="admin-order-service">{isHe ? o.serviceHe : o.service}</p>
                       <p className="admin-order-people">{isHe ? o.clientHe : o.client} → {isHe ? o.proHe : o.pro}</p>
                     </div>
-                    <span className="admin-order-price">₪{o.price}</span>
+                    {o.status === "done" && o.price != null && o.price > 0
+                      ? <span className="admin-order-price">₪{o.price}</span>
+                      : <span className="admin-order-price admin-order-price--pending">—</span>}
                     <span className="admin-status-pill" style={{ background: st.bg, color: st.color }}>
                       {L(o.status.replace("_", " "), o.status)}
                     </span>

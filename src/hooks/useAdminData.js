@@ -137,7 +137,7 @@ export function useAdminData(L) {
           service: o.serviceType || "", serviceHe: o.serviceType || "",
           client: o.client || "", clientHe: o.client || "",
           pro: o.pro || "", proHe: o.pro || "",
-          price: o.price != null ? o.price : 0,
+          price: o.price != null ? o.price : null,  // null = טרם נקבע (מוצג רק בהזמנה שהושלמה)
           status: mapSt(o.status),
         })));
       })

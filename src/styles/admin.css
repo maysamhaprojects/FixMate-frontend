@@ -319,3 +319,5 @@
 .admin-order-service { font-size: 13px; font-weight: 600; color: #1A2B4A; margin-bottom: 2px; }
 .admin-order-people { font-size: 11px; color: #94A3B8; }
 .admin-order-price { font-size: 13px; font-weight: 800; color: #059669; font-family: 'Outfit', sans-serif; }
+/* מחיר שטרם נקבע (הזמנה לא הושלמה) */
+.admin-order-price--pending, .admin-mini-price--pending { color: #CBD5E1; font-weight: 600; }

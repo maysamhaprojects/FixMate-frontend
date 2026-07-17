@@ -12,6 +12,7 @@
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useProProfile } from "../hooks/useProProfile";
+import ServiceMap from "../components/ServiceMap";
 import { IconBack, IconForward, IconStar, IconMapPin, IconPhone, IconMail, IconUser, IconEdit, IconSave, IconX, IconPlus, IconCamera, IconChevron } from "../components/ProIcons";
 import { SHEKEL, ALL_AREAS } from "../data/serviceAreas";
 import "../styles/proProfile.css";
@@ -277,14 +278,18 @@ export default function ProProfile() {
             </div>
           )}
 
-          {/* Map placeholder */}
-          <div className="pp-map">
-            <div className="pp-map-ico">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+          {/* מפת אזורי השירות — OpenStreetMap חינמית עם סימון לכל עיר */}
+          {areas.length > 0 ? (
+            <ServiceMap areas={areas} isHe={isHe} />
+          ) : (
+            <div className="pp-map">
+              <div className="pp-map-ico">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" /><circle cx="12" cy="10" r="3" /></svg>
+              </div>
+              <p className="pp-map-title">{isHe ? "אין אזורי שירות עדיין" : "No service areas yet"}</p>
+              <p className="pp-map-sub">{isHe ? "הוסיפו אזור כדי לראות אותו על המפה" : "Add an area to see it on the map"}</p>
             </div>
-            <p className="pp-map-title">{isHe ? "מפה" : "Map"}</p>
-            <p className="pp-map-sub">Google Maps</p>
-          </div>
+          )}
         </div>
       </div>
     </div>

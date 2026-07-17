@@ -261,6 +261,18 @@
 .pp-map-title { font-size: 14px; font-weight: 600; color: #5A6B8A; }
 .pp-map-sub { font-size: 12px; color: #94A3B8; }
 
+/* מפה אמיתית (Leaflet) */
+.pp-map-real {
+  height: 260px;
+  border-radius: 16px;
+  overflow: hidden;
+  border: 1px solid #E8ECF4;
+  z-index: 0; /* שהמפה לא תעלה מעל תפריטים/מודלים */
+}
+.pp-map-real .leaflet-container { border-radius: 16px; font-family: inherit; }
+/* הסיכה שקופה מסביב ל-SVG */
+.fm-map-pin { background: none; border: none; }
+
 /* ── אנימציות כניסה מדורגות ── */
 .pp-fade-1 { animation: fadeUp .4s;  }
 .pp-fade-2 { animation: fadeUp .45s; }

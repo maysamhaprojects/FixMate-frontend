@@ -181,25 +181,22 @@ export default function ManageOrders() {
                         <IconPhone /> {order.phone}
                       </button>
 
-                      {/* כפתורי פעולה קומפקטיים */}
-                      <div className="mo-actions">
-                        {actions.length > 0 ? actions.map(a => (
-                          <button
-                            key={a.id}
-                            className="act-btn"
-                            onClick={() => setModal({ order, actionId: a.id })}
-                            /* צבע הכפתור מוגדר בקבועים לפי הפעולה */
-                            style={{ border: a.border ?? "none", background: a.bg, color: a.color, boxShadow: a.glow ? `0 4px 12px ${a.glow}` : "none" }}
-                          >
-                            {a.icon} {L(a.label)}
-                          </button>
-                        )) : (
-                          <span className="mo-done-note">
-                            {order.status === "done"      && (isHe ? "✅ הושלם" : "✅ Completed")}
-                            {order.status === "cancelled" && (isHe ? "❌ בוטל"  : "❌ Cancelled")}
-                          </span>
-                        )}
-                      </div>
+                      {/* כפתורי פעולה — רק בהזמנות פעילות. בהושלם/בוטל התג למעלה כבר אומר הכל */}
+                      {actions.length > 0 && (
+                        <div className="mo-actions">
+                          {actions.map(a => (
+                            <button
+                              key={a.id}
+                              className="act-btn"
+                              onClick={() => setModal({ order, actionId: a.id })}
+                              /* צבע הכפתור מוגדר בקבועים לפי הפעולה */
+                              style={{ border: a.border ?? "none", background: a.bg, color: a.color, boxShadow: a.glow ? `0 4px 12px ${a.glow}` : "none" }}
+                            >
+                              {a.icon} {L(a.label)}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

@@ -84,6 +84,7 @@ export function useClientData({ t, lang, isHe }) {
             proPic: (b.pro && b.pro.profilePicture) || "",
             rating: null,
             status: (b.status || "PENDING").toLowerCase(),
+            price: b.totalPrice != null ? b.totalPrice : null,  // המחיר הסופי — null עד שבעל המקצוע קובע אותו
             date: sched.slice(0, 10),
             time: sched.slice(11, 16),
             phone: (b.pro && b.pro.phone) || "",

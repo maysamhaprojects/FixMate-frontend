@@ -240,6 +240,13 @@ export default function ClientDashboard() {
                       <span className="cd-order-meta-item"><IconClock />{order.date}, {order.time}</span>
                       <span className="cd-order-meta-item"><IconPhone />{order.phone}</span>
                     </div>
+                    {/* מחיר לתשלום — מוצג רק אחרי שבעל המקצוע סיים וקבע אותו */}
+                    {order.status === "completed" && order.price != null && order.price > 0 && (
+                      <div className="cd-order-price">
+                        <span className="cd-order-price-label">{isHe ? "לתשלום" : "Amount to pay"}</span>
+                        <span className="cd-order-price-value">₪{order.price}</span>
+                      </div>
+                    )}
                     <div className="cd-order-actions">
                       {order.status === "pending" && (
                         <>

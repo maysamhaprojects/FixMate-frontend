@@ -451,6 +451,15 @@
   font-size: 13px; color: #5A6B8A;
 }
 
+/* מחיר לתשלום — בהזמנה שהושלמה */
+.cd-order-price {
+  display: flex; align-items: center; justify-content: space-between;
+  background: #ECFDF5; border: 1px solid #A7F3D0;
+  border-radius: 12px; padding: 10px 16px; margin-bottom: 14px;
+}
+.cd-order-price-label { font-size: 13px; font-weight: 600; color: #047857; }
+.cd-order-price-value { font-size: 18px; font-weight: 800; font-family: 'Outfit', sans-serif; color: #059669; }
+
 /* Action buttons */
 .cd-order-actions {
   display: flex; gap: 10px; flex-wrap: wrap;

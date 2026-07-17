@@ -66,6 +66,9 @@ export function useProOrders({ L }) {
     return okStatus && okSearch;
   });
 
+  /* מחיר סופי — נקבע על ידי בעל המקצוע בסיום העבודה */
+  const [finalPrice, setFinalPrice] = useState("");
+
   /* עדכון סטטוס הזמנה בשרת — PUT /api/pro/orders/:id/status */
   const doAction = async (orderId, actionId) => {
     const order = orders.find(o => o.id === orderId);
@@ -73,16 +76,24 @@ export function useProOrders({ L }) {
     // סטטוס לשרת (BookingStatus) וסטטוס לתצוגה
     const serverStatus = { accept: "CONFIRMED", start: "IN_PROGRESS", finish: "COMPLETED", reject: "CANCELLED" }[actionId];
     const uiStatus     = { accept: "confirmed", start: "in_progress", finish: "done",      reject: "cancelled" }[actionId];
+
+    // בסיום — שולחים את המחיר הסופי שהוזן
+    const body = { status: serverStatus };
+    if (actionId === "finish" && finalPrice !== "") body.finalPrice = String(finalPrice);
+
     try {
       const r = await apiFetch("/api/pro/orders/" + order.bookingId + "/status", {
         method: "PUT",
-        body: JSON.stringify({ status: serverStatus }),
+        body: JSON.stringify(body),
       });
       if (r.ok) {
-        setOrders(prev => prev.map(o => o.id === orderId ? { ...o, status: uiStatus } : o));
+        setOrders(prev => prev.map(o => o.id === orderId
+          ? { ...o, status: uiStatus, price: (actionId === "finish" && finalPrice !== "") ? Number(finalPrice) : o.price }
+          : o));
       }
     } catch (e) { /* נכשל — משאירים כמו שהוא */ }
     setModal(null);
+    setFinalPrice("");
   };
 
   return {
@@ -91,6 +102,7 @@ export function useProOrders({ L }) {
     activeFilter, setActiveFilter,
     search, setSearch,
     modal, setModal,
+    finalPrice, setFinalPrice,
     doAction,
   };
 }

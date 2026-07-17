@@ -212,6 +212,27 @@
   font-size: 14px; font-weight: 700;
   cursor: pointer; font-family: inherit;
 }
+.mo-modal-ok:disabled { opacity: .5; cursor: not-allowed; }
+
+/* ════════ שדה מחיר סופי (בסיום עבודה) ════════ */
+.mo-price-field { margin-bottom: 24px; text-align: start; }
+.mo-price-label { display: block; font-size: 14px; font-weight: 700; color: #1A2B4A; margin-bottom: 10px; text-align: center; }
+.mo-price-input-wrap {
+  display: flex; align-items: center; gap: 6px;
+  background: #F8FAFF; border: 2px solid #10B981;
+  border-radius: 14px; padding: 4px 16px;
+  box-shadow: 0 0 0 4px rgba(16,185,129,.08);
+}
+.mo-price-shekel { font-size: 22px; font-weight: 800; color: #10B981; font-family: 'Outfit'; }
+.mo-price-input {
+  flex: 1; border: none; outline: none; background: transparent;
+  font-size: 26px; font-weight: 800; font-family: 'Outfit';
+  color: #1A2B4A; padding: 10px 0; text-align: center;
+  -moz-appearance: textfield;
+}
+.mo-price-input::-webkit-outer-spin-button,
+.mo-price-input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.mo-price-hint { font-size: 12px; color: #94A3B8; text-align: center; margin-top: 8px; }
 
 /* ════════ רספונסיבי ════════ */
 @media (max-width: 640px) {

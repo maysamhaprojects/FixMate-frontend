@@ -41,6 +41,7 @@ export default function ManageOrders() {
     activeFilter, setActiveFilter,
     search, setSearch,
     modal, setModal,
+    finalPrice, setFinalPrice,
     doAction,
   } = useProOrders({ L });
 
@@ -212,6 +213,27 @@ export default function ManageOrders() {
               <h3 className="mo-modal-title">{L(cfg.title)}</h3>
               <p className="mo-modal-line"><strong>{L(modal.order.clientName)}</strong> — {L(modal.order.service)}</p>
               <p className="mo-modal-when">{L(modal.order.date)}, {modal.order.time}</p>
+
+              {/* בסיום העבודה — בעל המקצוע קובע את המחיר הסופי */}
+              {modal.actionId === "finish" && (
+                <div className="mo-price-field">
+                  <label className="mo-price-label">{isHe ? "מה המחיר הסופי של העבודה?" : "What's the final price for this job?"}</label>
+                  <div className="mo-price-input-wrap">
+                    <span className="mo-price-shekel">₪</span>
+                    <input
+                      className="mo-price-input"
+                      type="number"
+                      min="0"
+                      value={finalPrice}
+                      onChange={(e) => setFinalPrice(e.target.value)}
+                      placeholder="0"
+                      autoFocus
+                    />
+                  </div>
+                  <p className="mo-price-hint">{isHe ? "הלקוח יראה את הסכום הזה כמחיר לתשלום" : "The client will see this as the amount to pay"}</p>
+                </div>
+              )}
+
               <div className="mo-modal-btns">
                 <button className="mo-modal-cancel" onClick={() => setModal(null)}>
                   {isHe ? "ביטול" : "Cancel"}
@@ -219,6 +241,7 @@ export default function ManageOrders() {
                 <button
                   className="mo-modal-ok"
                   onClick={() => doAction(modal.order.id, modal.actionId)}
+                  disabled={modal.actionId === "finish" && finalPrice === ""}
                   style={{ background: cfg.btnBg, boxShadow: `0 6px 20px ${cfg.glow}` }}
                 >
                   {L(cfg.btn)}

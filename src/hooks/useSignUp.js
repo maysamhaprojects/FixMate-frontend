@@ -7,7 +7,7 @@
  * ============================================================
  */
 import { useState, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { register } from "../services/auth";
 import { COUNTRIES } from "../data/countries";
 import { ISRAEL_CITIES } from "../data/israelCities";
 
@@ -238,10 +238,7 @@ export function useSignUp({ isHe, navigate }) {
         body.documents = docs.length > 0 ? JSON.stringify(docs) : null;
       }
 
-      const response = await apiFetch("/api/auth/register", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      const response = await register(body);
 
       const data = await response.json();
 

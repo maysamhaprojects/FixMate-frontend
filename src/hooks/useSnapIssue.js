@@ -7,7 +7,7 @@
  * ============================================================
  */
 import { useState, useRef, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { analyzeIssue } from "../services/snap";
 import { AI_RESPONSES, ISSUE_CATEGORIES, CATEGORY_TO_KEY } from "../data/diyGuides";
 
 export function useSnapIssue({ isHe, L }) {
@@ -141,10 +141,7 @@ export function useSnapIssue({ isHe, L }) {
 
     // התאמה מקומית נכשלה — פונים לשרת (תומך גם בעברית וגם באנגלית)
     try {
-      const res = await apiFetch("/api/snap/analyze", {
-        method: "POST",
-        body: JSON.stringify({ text }),
-      });
+      const res = await analyzeIssue(text);
       const data = await res.json();
       const key = CATEGORY_TO_KEY[data.category];
       if (key && AI_RESPONSES[key]) {

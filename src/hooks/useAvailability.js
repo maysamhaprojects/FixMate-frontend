@@ -7,7 +7,7 @@
  * ============================================================
  */
 import { useState, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { getAvailability, updateAvailability } from "../services/pro";
 import { DAYS } from "../data/weekDays";
 
 export function useAvailability({ isHe, navigate }) {
@@ -28,7 +28,7 @@ export function useAvailability({ isHe, navigate }) {
 
   /* טעינת הזמינות הקיימת מהשרת */
   useEffect(() => {
-    apiFetch("/api/pro/availability")
+    getAvailability()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -61,14 +61,11 @@ export function useAvailability({ isHe, navigate }) {
     try {
       // שומרים כל יום בנפרד (הבקאנד מקבל יום בודד ומעדכן/יוצר)
       for (const row of week) {
-        await apiFetch("/api/pro/availability", {
-          method: "PUT",
-          body: JSON.stringify({
-            dayOfWeek: row.day,
-            startTime: row.start + ":00",
-            endTime: row.end + ":00",
-            available: row.available,
-          }),
+        await updateAvailability({
+          dayOfWeek: row.day,
+          startTime: row.start + ":00",
+          endTime: row.end + ":00",
+          available: row.available,
         });
       }
       setShowSuccess(true);

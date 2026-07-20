@@ -8,7 +8,9 @@
  * ============================================================
  */
 import { useState, useEffect, useRef } from "react";
-import { apiFetch } from "../services/api";
+import { getMe, updateMe } from "../services/user";
+import * as adminApi from "../services/admin";
+import { getAllComplaints, resolveComplaint } from "../services/complaint";
 
 export function useAdminData(L) {
   /* ── state ── */
@@ -74,7 +76,7 @@ export function useAdminData(L) {
   const loadPendingPros = async () => {
     setProError("");
     try {
-      const r = await apiFetch("/api/admin/pros/pending");
+      const r = await adminApi.getPendingPros();
       const raw = await r.text();
       if (!r.ok) {
         setProError("סטטוס " + r.status + " — " + raw.slice(0, 300));
@@ -97,17 +99,17 @@ export function useAdminData(L) {
 
   /* ── משיכת כל הנתונים האמיתיים ── */
   useEffect(() => {
-    apiFetch("/api/user/me")
+    getMe()
       .then((r) => (r.ok ? r.json() : null))
       .then((u) => { if (u) { setMe({ name: u.fullName || "Admin", email: u.email || "", profilePicture: u.profilePicture || "" }); localStorage.setItem("profilePicture", u.profilePicture || ""); } })
       .catch(() => {});
 
-    apiFetch("/api/admin/stats")
+    adminApi.getStats()
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => { if (s) setStats(s); })
       .catch(() => {});
 
-    apiFetch("/api/admin/users")
+    adminApi.getUsers()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -126,7 +128,7 @@ export function useAdminData(L) {
       })
       .catch(() => {});
 
-    apiFetch("/api/admin/orders")
+    adminApi.getOrders()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -144,7 +146,7 @@ export function useAdminData(L) {
       .catch(() => {});
 
     /* תלונות */
-    apiFetch("/api/admin/complaints")
+    getAllComplaints()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -170,7 +172,7 @@ export function useAdminData(L) {
       .catch(() => {});
 
     /* דירוגים */
-    apiFetch("/api/admin/ratings")
+    adminApi.getRatings()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -196,7 +198,7 @@ export function useAdminData(L) {
 
   /* ── פעולות ── */
   const approvePro = (id) => {
-    apiFetch("/api/admin/pros/" + id + "/approve", { method: "PUT" })
+    adminApi.approvePro(id)
       .then((r) => {
         if (!r.ok) throw new Error("failed");
         setPros(p => p.filter(x => x.id !== id));
@@ -207,8 +209,7 @@ export function useAdminData(L) {
   };
 
   const rejectPro = (id, reason) => {
-    const q = reason && reason.trim() ? "?reason=" + encodeURIComponent(reason.trim()) : "";
-    apiFetch("/api/admin/pros/" + id + "/reject" + q, { method: "PUT" })
+    adminApi.rejectPro(id, reason && reason.trim() ? reason.trim() : null)
       .then((r) => {
         if (!r.ok) throw new Error("failed");
         setPros(p => p.filter(x => x.id !== id));
@@ -219,10 +220,7 @@ export function useAdminData(L) {
   };
 
   const resolveComp = (id, response) => {
-    apiFetch("/api/admin/complaints/" + id + "/status", {
-      method: "PUT",
-      body: JSON.stringify({ status: "RESOLVED", response: response || "" }),
-    })
+    resolveComplaint(id, response)
       .then((r) => {
         if (!r.ok) throw new Error("failed");
         setComps(p => p.map(x => x.id === id ? { ...x, status: "resolved", adminResponse: response || x.adminResponse } : x));
@@ -233,7 +231,7 @@ export function useAdminData(L) {
   };
 
   const toggleUser = (id) => {
-    apiFetch("/api/admin/users/" + id + "/toggle-suspend", { method: "PUT" })
+    adminApi.toggleSuspend(id)
       .then((r) => r.ok ? r.json() : null)
       .then((data) => {
         if (!data) { showToast(L("Update failed", "העדכון נכשל"), "warning"); return; }
@@ -260,10 +258,7 @@ export function useAdminData(L) {
         canvas.width = w; canvas.height = h;
         canvas.getContext("2d").drawImage(img, 0, 0, w, h);
         const dataUrl = canvas.toDataURL("image/jpeg", 0.85);
-        apiFetch("/api/user/me", {
-          method: "PUT",
-          body: JSON.stringify({ fullName: me.name, profilePicture: dataUrl }),
-        })
+        updateMe({ fullName: me.name, profilePicture: dataUrl })
           .then((r) => (r.ok ? r.json() : null))
           .then((u) => {
             if (u) { setMe((m) => ({ ...m, profilePicture: u.profilePicture || "" })); localStorage.setItem("profilePicture", u.profilePicture || ""); showToast(L("Photo updated ✓", "התמונה עודכנה ✓")); }

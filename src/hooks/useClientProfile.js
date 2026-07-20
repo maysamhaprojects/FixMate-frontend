@@ -7,7 +7,7 @@
  * ============================================================
  */
 import { useState, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { getMe, updateMe } from "../services/user";
 
 export function useClientProfile({ isHe, navigate }) {
   const [fullName, setFullName] = useState(localStorage.getItem("fullName") || "");
@@ -30,7 +30,7 @@ export function useClientProfile({ isHe, navigate }) {
       setLoading(false);
       return;
     }
-    apiFetch("/api/user/me")
+    getMe()
       .then(async (r) => {
         if (!r.ok) {
           let body = "";
@@ -96,10 +96,7 @@ export function useClientProfile({ isHe, navigate }) {
     setSaving(true);
     setMessage(null);
     try {
-      const r = await apiFetch("/api/user/me", {
-        method: "PUT",
-        body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), email: email.trim(), profilePicture: profilePicture || "" }),
-      });
+      const r = await updateMe({ fullName: fullName.trim(), phone: phone.trim(), email: email.trim(), profilePicture: profilePicture || "" });
       if (!r.ok) {
         let body = "";
         try { body = await r.text(); } catch (e) { /* ignore */ }

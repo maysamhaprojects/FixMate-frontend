@@ -7,7 +7,8 @@
  * ============================================================
  */
 import { useState, useRef, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { getPros } from "../services/client";
+import { createBooking } from "../services/booking";
 import { ISRAEL_CITIES } from "../data/israelCities";
 import { catIcons, CAT_MATCH, CAT_LABEL_KEYS, getDiagnosis, getDiagnosisFromText, TIME_OPTIONS } from "../data/bookingCatalog";
 
@@ -82,7 +83,7 @@ export function useBooking({ t, lang, isHe, navigate }) {
   useEffect(() => {
     if (!results) return;
     setProsLoading(true);
-    apiFetch("/api/client/pros")
+    getPros()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         const arr = Array.isArray(list) ? list : [];
@@ -134,15 +135,12 @@ export function useBooking({ t, lang, isHe, navigate }) {
     setBooking(true);
     setBookErr("");
     try {
-      const r = await apiFetch("/api/client/bookings", {
-        method: "POST",
-        body: JSON.stringify({
-          proId: modal.userId,
-          serviceType: catLabel || modal.specialty || "",
-          scheduledAt: date + "T" + time + ":00",
-          address: city,
-          notes: desc || "",
-        }),
+      const r = await createBooking({
+        proId: modal.userId,
+        serviceType: catLabel || modal.specialty || "",
+        scheduledAt: date + "T" + time + ":00",
+        address: city,
+        notes: desc || "",
       });
       if (!r.ok) throw new Error("failed");
       setModal(null);

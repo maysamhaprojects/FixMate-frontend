@@ -7,7 +7,11 @@
  * ============================================================
  */
 import { useState, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { getMe } from "../services/user";
+import { getNotifications } from "../services/client";
+import { getMyBookings, updateBooking, cancelBooking } from "../services/booking";
+import { getRatedBookings } from "../services/rating";
+import { createComplaint, getMyComplaints } from "../services/complaint";
 import { CANCEL_FEE, GRACE_MINUTES } from "../data/clientConstants";
 
 export function useClientData({ t, lang, isHe }) {
@@ -66,7 +70,7 @@ export function useClientData({ t, lang, isHe }) {
 
   /* משיכת ההזמנות האמיתיות של הלקוח המחובר */
   useEffect(() => {
-    apiFetch("/api/client/bookings")
+    getMyBookings()
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -98,7 +102,7 @@ export function useClientData({ t, lang, isHe }) {
 
   /* משיכת התראות אמיתיות לפי סטטוס ההזמנות */
   useEffect(() => {
-    apiFetch("/api/client/notifications")
+    getNotifications()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -126,7 +130,7 @@ export function useClientData({ t, lang, isHe }) {
 
   /* אילו הזמנות כבר דורגו — כדי להסתיר את כפתור "דרג" */
   useEffect(() => {
-    apiFetch("/api/client/rated-bookings")
+    getRatedBookings()
       .then((r) => (r.ok ? r.json() : []))
       .then((ids) => { if (Array.isArray(ids)) setRatedIds(ids); })
       .catch(() => {});
@@ -134,7 +138,7 @@ export function useClientData({ t, lang, isHe }) {
 
   /* תמונת פרופיל של המשתמש המחובר */
   useEffect(() => {
-    apiFetch("/api/user/me")
+    getMe()
       .then((r) => (r.ok ? r.json() : null))
       .then((u) => {
         if (u) {
@@ -148,7 +152,7 @@ export function useClientData({ t, lang, isHe }) {
 
   /* התלונות של הלקוח + הסטטוס שלהן (מתעדכן אוטומטית) */
   useEffect(() => {
-    apiFetch("/api/complaints/mine")
+    getMyComplaints()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => { if (Array.isArray(list)) setMyComplaints(list); })
       .catch(() => {});
@@ -181,10 +185,7 @@ export function useClientData({ t, lang, isHe }) {
     // מאחדים תאריך + שעה ל-LocalDateTime בפורמט ISO
     const scheduledAt = editDate ? (editDate + "T" + (editTime || "00:00") + ":00") : null;
     setEditSaving(true);
-    apiFetch("/api/client/bookings/" + order.bookingId, {
-      method: "PUT",
-      body: JSON.stringify({ scheduledAt, address: editAddr.trim(), notes: editDesc }),
-    })
+    updateBooking(order.bookingId, { scheduledAt, address: editAddr.trim(), notes: editDesc })
       .then((r) => {
         if (r.ok) {
           setOrders(prev => prev.map(o => o.id === order.id
@@ -216,10 +217,7 @@ export function useClientData({ t, lang, isHe }) {
     const body = { subject: compSubject.trim(), description: compDesc.trim() };
     if (compOrderId) body.bookingId = Number(compOrderId);
     setCompSaving(true);
-    apiFetch("/api/complaints", {
-      method: "POST",
-      body: JSON.stringify(body),
-    })
+    createComplaint(body)
       .then((r) => {
         if (r.ok) {
           setShowComplaint(false);
@@ -251,10 +249,7 @@ export function useClientData({ t, lang, isHe }) {
       showToast(isHe ? "שגיאה: חסר מזהה הזמנה. רענני את הדף ונסי שוב." : "Error: missing booking id. Hard-refresh and try again.", "error");
       return;
     }
-    const q = cancelReason.trim() ? "?reason=" + encodeURIComponent(cancelReason.trim()) : "";
-    apiFetch("/api/client/bookings/" + order.bookingId + q, {
-      method: "DELETE",
-    })
+    cancelBooking(order.bookingId, cancelReason.trim() || null)
       .then((r) => {
         if (r.ok) {
           setOrders(prev => prev.filter(o => o.id !== order.id)); // הוסר מהתצוגה רק אם השרת אישר

@@ -7,7 +7,7 @@
  * ============================================================
  */
 import { useState, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import * as proApi from "../services/pro";
 
 /* המרת תאריך ל"לפני X" */
 const timeAgo = (iso) => {
@@ -69,7 +69,7 @@ export function useProData() {
 
   /* פרופיל */
   useEffect(() => {
-    apiFetch("/api/pro/profile")
+    proApi.getProfile()
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => {
         if (!p) return;
@@ -89,7 +89,7 @@ export function useProData() {
 
   /* סטטיסטיקות */
   useEffect(() => {
-    apiFetch("/api/pro/stats")
+    proApi.getStats()
       .then((r) => (r.ok ? r.json() : null))
       .then((s) => {
         if (!s) return;
@@ -106,7 +106,7 @@ export function useProData() {
 
   /* ביקורות */
   useEffect(() => {
-    apiFetch("/api/pro/reviews")
+    proApi.getReviews()
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -125,7 +125,7 @@ export function useProData() {
 
   /* התראות */
   useEffect(() => {
-    apiFetch("/api/pro/notifications")
+    proApi.getNotifications()
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -157,7 +157,7 @@ export function useProData() {
 
   /* לוח זמנים של היום */
   useEffect(() => {
-    apiFetch("/api/pro/schedule/today")
+    proApi.getTodaySchedule()
       .then((r) => (r.ok ? r.json() : null))
       .then((list) => {
         if (!Array.isArray(list)) return;

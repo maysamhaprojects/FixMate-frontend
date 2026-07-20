@@ -7,7 +7,8 @@
  * ============================================================
  */
 import { useState, useEffect } from "react";
-import { apiFetch } from "../services/api";
+import { getProfile } from "../services/pro";
+import { getProOrders, updateOrderStatus } from "../services/booking";
 
 /* המרת סטטוס מהשרת לתצוגה */
 const mapStatus = (s) => {
@@ -33,7 +34,7 @@ export function useProOrders({ L }) {
 
   /* טעינת טווח המחירים של בעל המקצוע מהפרופיל */
   useEffect(() => {
-    apiFetch("/api/pro/profile")
+    getProfile()
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => {
         if (p) setPriceRange({ min: p.hourlyRate ?? null, max: p.hourlyRateMax ?? null });
@@ -43,7 +44,7 @@ export function useProOrders({ L }) {
 
   /* טעינת ההזמנות האמיתיות של בעל המקצוע */
   const loadOrders = () => {
-    apiFetch("/api/pro/orders")
+    getProOrders()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -109,10 +110,7 @@ export function useProOrders({ L }) {
     if (actionId === "finish" && finalPrice !== "") body.finalPrice = String(finalPrice);
 
     try {
-      const r = await apiFetch("/api/pro/orders/" + order.bookingId + "/status", {
-        method: "PUT",
-        body: JSON.stringify(body),
-      });
+      const r = await updateOrderStatus(order.bookingId, body);
       if (r.ok) {
         setOrders(prev => prev.map(o => o.id === orderId
           ? { ...o, status: uiStatus, price: (actionId === "finish" && finalPrice !== "") ? Number(finalPrice) : o.price }

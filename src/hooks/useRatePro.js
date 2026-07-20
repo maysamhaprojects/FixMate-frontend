@@ -7,7 +7,7 @@
  * ============================================================
  */
 import { useState } from "react";
-import { apiFetch } from "../services/api";
+import { createRating } from "../services/rating";
 import { improveReview } from "../utils/improveReview";
 
 export function useRatePro({ isHe, bookingId, navigate }) {
@@ -31,10 +31,7 @@ export function useRatePro({ isHe, bookingId, navigate }) {
     setSubmitting(true);
     setSubmitErr("");
     try {
-      const r = await apiFetch("/api/client/ratings", {
-        method: "POST",
-        body: JSON.stringify({ bookingId: parseInt(bookingId), score: rating, comment: comment.trim() }),
-      });
+      const r = await createRating({ bookingId: parseInt(bookingId), score: rating, comment: comment.trim() });
       if (!r.ok) {
         let body = "";
         try { body = await r.text(); } catch (e) {}

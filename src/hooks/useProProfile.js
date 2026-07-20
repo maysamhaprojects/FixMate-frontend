@@ -7,7 +7,8 @@
  * ============================================================
  */
 import { useState, useEffect, useRef } from "react";
-import { apiFetch } from "../services/api";
+import { updateMe } from "../services/user";
+import { getProfile, updateProfile, getReviews } from "../services/pro";
 
 export function useProProfile({ isHe }) {
   const [mounted, setMounted] = useState(false);
@@ -38,7 +39,7 @@ export function useProProfile({ isHe }) {
 
   /* טעינת הביקורות האמיתיות */
   useEffect(() => {
-    apiFetch("/api/pro/reviews")
+    getReviews()
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         if (!Array.isArray(list)) return;
@@ -54,7 +55,7 @@ export function useProProfile({ isHe }) {
 
   /* טעינת הפרופיל האמיתי מהשרת */
   useEffect(() => {
-    apiFetch("/api/pro/profile")
+    getProfile()
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => {
         if (!p) return;
@@ -80,10 +81,7 @@ export function useProProfile({ isHe }) {
   /* שומר תמונה מיד לשרת (כמו אצל הלקוח — לחיצה ומיד נשמר) */
   const savePhoto = (dataUrl) => {
     setProfilePicture(dataUrl);
-    apiFetch("/api/user/me", {
-      method: "PUT",
-      body: JSON.stringify({ fullName: fullName || "", profilePicture: dataUrl }),
-    })
+    updateMe({ fullName: fullName || "", profilePicture: dataUrl })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d) {
@@ -122,22 +120,16 @@ export function useProProfile({ isHe }) {
   const handleSave = async () => {
     try {
       // 1) פרטי המקצוע (מקצוע, תיאור, עיר, מחיר) — /api/pro/profile
-      await apiFetch("/api/pro/profile", {
-        method: "PUT",
-        body: JSON.stringify({
-          specialty: specialty || null,
-          bio: bio || null,
-          location: areas.map((a) => (isHe ? a.he : a.en)).join(", ") || null,
-          hourlyRate: minPrice !== "" ? parseFloat(minPrice) : null,
-          hourlyRateMax: maxPrice !== "" ? parseFloat(maxPrice) : null,
-          yearsExperience: yearsExp !== "" ? parseInt(yearsExp) : null,
-        }),
+      await updateProfile({
+        specialty: specialty || null,
+        bio: bio || null,
+        location: areas.map((a) => (isHe ? a.he : a.en)).join(", ") || null,
+        hourlyRate: minPrice !== "" ? parseFloat(minPrice) : null,
+        hourlyRateMax: maxPrice !== "" ? parseFloat(maxPrice) : null,
+        yearsExperience: yearsExp !== "" ? parseInt(yearsExp) : null,
       });
       // 2) שם וטלפון — /api/user/me
-      const r2 = await apiFetch("/api/user/me", {
-        method: "PUT",
-        body: JSON.stringify({ fullName: fullName.trim(), phone: phone.trim(), profilePicture: profilePicture || "" }),
-      });
+      const r2 = await updateMe({ fullName: fullName.trim(), phone: phone.trim(), profilePicture: profilePicture || "" });
       if (r2.ok) {
         const d = await r2.json();
         localStorage.setItem("fullName", d.fullName || fullName.trim());

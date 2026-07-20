@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import "../styles/auth.css";
 import { useLang } from "../context/LanguageContext";
-import { apiFetch } from "../services/api";
+import { login } from "../services/auth";
 import { IconMail, IconLock, IconEye, IconEyeOff, IconWrench, IconHome, IconArrowLeft, IconSpinner, IconShield } from "../components/AuthIcons";
 
 
@@ -14,13 +14,12 @@ export default function SignIn() {
   var dir       = langCtx.dir;
   var isHe      = lang === "he";
 
-  // "זכור אותי" — טוענים את הפרטים שנשמרו בכניסה הקודמת
+  // "זכור אותי" — טוענים מייל ותפקיד בלבד. סיסמה לא נשמרת אף פעם.
   var savedEmail = localStorage.getItem("rememberedEmail") || "";
-  var savedPass  = localStorage.getItem("rememberedPassword") || "";
   var savedRole  = localStorage.getItem("rememberedRole")  || "professional";
 
   var _e  = useState(savedEmail); var email  = _e[0];  var setEmail        = _e[1];
-  var _p  = useState(savedPass);  var password = _p[0]; var setPassword     = _p[1];
+  var _p  = useState("");         var password = _p[0]; var setPassword     = _p[1];
   var _ro = useState(savedRole); var role  = _ro[0]; var setRole      = _ro[1];
   // מסומן כברירת מחדל — אלא אם המשתמש ביטל את הסימון בכניסה קודמת
   var _rm = useState(localStorage.getItem("rememberOptOut") !== "1");
@@ -76,10 +75,7 @@ export default function SignIn() {
     setIsLoading(true);
 
     try {
-      const response = await apiFetch('/api/auth/login', {
-        method: 'POST',
-        body: JSON.stringify({ email: email, password: password })
-      });
+      const response = await login(email, password);
 
       const data = await response.json();
 
@@ -133,14 +129,12 @@ export default function SignIn() {
       localStorage.setItem('role', data.role);
       localStorage.setItem('fullName', data.fullName);
 
-      // "זכור אותי" — שומר מייל, סיסמה ותפקיד כדי למלא אותם אוטומטית בכניסה הבאה
+      // "זכור אותי" — שומר מייל ותפקיד בלבד. הסיסמה לעולם לא נשמרת בדפדפן.
       if (rememberMe) {
         localStorage.setItem('rememberedEmail', email);
-        localStorage.setItem('rememberedPassword', password);
         localStorage.setItem('rememberedRole', role);
       } else {
         localStorage.removeItem('rememberedEmail');
-        localStorage.removeItem('rememberedPassword');
         localStorage.removeItem('rememberedRole');
       }
 
@@ -356,7 +350,6 @@ export default function SignIn() {
               if (!next) {
                 localStorage.setItem('rememberOptOut', '1');
                 localStorage.removeItem('rememberedEmail');
-                localStorage.removeItem('rememberedPassword');
                 localStorage.removeItem('rememberedRole');
               } else {
                 localStorage.removeItem('rememberOptOut');

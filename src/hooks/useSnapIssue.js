@@ -7,8 +7,8 @@
  * ============================================================
  */
 import { useState, useRef, useEffect } from "react";
-import { analyzeIssue } from "../services/snap";
-import { AI_RESPONSES, ISSUE_CATEGORIES, CATEGORY_TO_KEY } from "../data/diyGuides";
+import { chatWithAgent } from "../services/snap";
+import { ISSUE_CATEGORIES } from "../data/diyGuides";
 
 export function useSnapIssue({ isHe, L }) {
   const [messages, setMessages] = useState([
@@ -29,6 +29,10 @@ export function useSnapIssue({ isHe, L }) {
   const chatRef = useRef(null);
   const inputRef = useRef(null);
 
+  /* היסטוריית השיחה בפורמט שהסוכן מבין — נשלחת במלואה בכל פנייה,
+     כי השרת לא שומר מצב בין בקשות */
+  const agentHistory = useRef([]);
+
   /* גלילה אוטומטית לתחתית הצ'אט */
   useEffect(() => {
     if (chatRef.current) {
@@ -45,15 +49,6 @@ export function useSnapIssue({ isHe, L }) {
     });
   };
 
-  /* אחרי אבחון — מציגים מדריך עצמי או המלצה לבעל מקצוע */
-  const showResult = async (response, delay = 500) => {
-    if (response.canDIY) await addBotMessage("diy_guide", delay);
-    else await addBotMessage("need_pro", delay);
-  };
-
-  const diagnosisLine = (response) =>
-    `🎯 **${isHe ? "אבחון" : "Diagnosis"}: ${L(response.diagnosis)}**\n\n${L(response.description)}`;
-
   const handleImageUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -66,108 +61,81 @@ export function useSnapIssue({ isHe, L }) {
   const handleSendImage = async () => {
     if (!imagePreview) return;
 
-    // Add user message with image
-    setMessages((prev) => [
-      ...prev,
-      { from: "user", text: "📷 Photo uploaded", image: imagePreview, time: new Date() },
-    ]);
+    const photo = imagePreview;   // נשמר לפני הניקוי כדי שנוכל לשלוח אותו
+    const caption = input.trim(); // אפשר לצרף תיאור יחד עם התמונה
+
     setImage(null);
     setImagePreview(null);
-    setAnalyzing(true);
+    setInput("");
 
-    // Simulate AI analysis
-    await addBotMessage(isHe ? "📸 מנתח את התמונה..." : "📸 Analyzing your photo...", 1000);
-    await addBotMessage(isHe ? "🔍 מזהה את סוג התקלה..." : "🔍 Detecting issue type...", 1500);
-
-    // Random diagnosis for demo
-    const keys = Object.keys(AI_RESPONSES);
-    const randomKey = keys[Math.floor(Math.random() * keys.length)];
-    const response = AI_RESPONSES[randomKey];
-
-    setAnalyzing(false);
-    setDiagnosed(response);
-
-    await addBotMessage(diagnosisLine(response), 1000);
-    await showResult(response);
+    await sendToAgent(
+      caption || (isHe ? "צירפתי תמונה של התקלה." : "I've attached a photo of the problem."),
+      caption || "📷",
+      photo
+    );
   };
 
   const handleQuickSelect = async (issueId) => {
     const issue = ISSUE_CATEGORIES.find((c) => c.id === issueId);
-    const response = AI_RESPONSES[issueId];
+    if (!issue) return;
 
-    setMessages((prev) => [
-      ...prev,
-      { from: "user", text: `${issue.icon} ${issue.label}`, time: new Date() },
-    ]);
-
-    setAnalyzing(true);
-    await addBotMessage(isHe ? "🔍 בודק מה אפשר לעשות..." : "🔍 Let me check what I can do for you...", 1000);
-
-    setAnalyzing(false);
-    setDiagnosed(response);
-
-    await addBotMessage(diagnosisLine(response), 800);
-    await showResult(response);
+    // בחירה מהירה היא רק דרך נוחה להתחיל — משם זו שיחה רגילה עם הסוכן
+    await sendToAgent(isHe ? issue.labelHe : issue.label, `${issue.icon} ${issue.label}`);
   };
 
   const handleSendText = async () => {
     if (!input.trim()) return;
     const text = input.trim();
     setInput("");
-    setMessages((prev) => [...prev, { from: "user", text, time: new Date() }]);
+    await sendToAgent(text);
+  };
 
+  /**
+   * שולח הודעה לסוכן ומציג את תשובתו.
+   *
+   * @param text        מה שנשלח לסוכן
+   * @param displayText מה שמוצג בבועה של המשתמש, אם שונה מ-text
+   * @param imageBase64 תמונה מצורפת, אם יש
+   */
+  const sendToAgent = async (text, displayText, imageBase64) => {
+    setMessages((prev) => [
+      ...prev,
+      { from: "user", text: displayText || text, image: imageBase64 || undefined, time: new Date() },
+    ]);
+    agentHistory.current = [...agentHistory.current, { role: "user", content: text }];
     setAnalyzing(true);
-    await addBotMessage(isHe ? "רגע, אני חושב על זה... 🤔" : "Let me think about that... 🤔", 1000);
 
-    // Simple keyword matching for demo
-    const lower = text.toLowerCase();
-    let matchKey = null;
-    if (lower.includes("faucet") || lower.includes("drip") || lower.includes("tap")) matchKey = "leaky_faucet";
-    else if (lower.includes("drain") || lower.includes("clog") || lower.includes("block")) matchKey = "clogged_drain";
-    else if (lower.includes("socket") || lower.includes("electric") || lower.includes("outlet")) matchKey = "broken_socket";
-    else if (lower.includes("crack") || lower.includes("wall") || lower.includes("plaster")) matchKey = "wall_crack";
-    else if (lower.includes("toilet") || lower.includes("running") || lower.includes("flush")) matchKey = "running_toilet";
-    else if (lower.includes("ac") || lower.includes("cool") || lower.includes("air")) matchKey = "ac_not_cooling";
-
-    setAnalyzing(false);
-
-    if (matchKey) {
-      const response = AI_RESPONSES[matchKey];
-      setDiagnosed(response);
-      await addBotMessage(diagnosisLine(response), 500);
-      await showResult(response);
-      return;
-    }
-
-    // התאמה מקומית נכשלה — פונים לשרת (תומך גם בעברית וגם באנגלית)
     try {
-      const res = await analyzeIssue(text);
+      const res = await chatWithAgent(agentHistory.current, imageBase64);
       const data = await res.json();
-      const key = CATEGORY_TO_KEY[data.category];
-      if (key && AI_RESPONSES[key]) {
-        const response = AI_RESPONSES[key];
-        setDiagnosed(response);
-        await addBotMessage(diagnosisLine(response), 500);
-        await showResult(response);
-      } else {
-        // קטגוריה כללית — מציגים את האבחון הבסיסי מהשרת
-        setDiagnosed({
-          diagnosis: data.diagnosis,
-          category: data.category,
-          canDIY: false,
-          safetyWarning: (data.diagnosis || "") + " — " + (data.estimatedCost || ""),
-        });
-        await addBotMessage(`🎯 **${isHe ? "אבחון" : "Diagnosis"}: ${data.diagnosis}**\n\n💰 ${data.estimatedCost}`, 500);
-        await addBotMessage("need_pro", 500);
+      setAnalyzing(false);
+
+      if (!data.reply) {
+        await addBotMessage(agentErrorText(data.error), 300);
+        return;
       }
+
+      agentHistory.current = [...agentHistory.current, { role: "assistant", content: data.reply }];
+      await addBotMessage(data.reply, 300);
+
+      // הסוכן כבר מודיע על ההזמנה בשפת המשתמש, לכן לא מוסיפים כאן הודעה
+      // כפולה. משאירים רק את הרינדור של אישור ההזמנה (סימון ✅) אם רוצים
+      // בעתיד — כרגע התשובה של הסוכן מספיקה.
     } catch (e) {
-      await addBotMessage(
-        isHe
-          ? "לא הצלחתי לנתח את זה כרגע. נסו להעלות תמונה או לבחור תקלה נפוצה למטה. 📷"
-          : "I couldn't analyze that right now. Try uploading a photo or picking a common issue below. 📷",
-        500
-      );
+      setAnalyzing(false);
+      await addBotMessage(agentErrorText(), 300);
     }
+  };
+
+  const agentErrorText = (code) => {
+    if (code === "openai_not_configured") {
+      return isHe
+        ? "שירות ה-AI לא מוגדר כרגע. פנו למנהל המערכת."
+        : "The AI service isn't configured right now. Please contact the administrator.";
+    }
+    return isHe
+      ? "לא הצלחתי לענות כרגע. נסו שוב בעוד רגע. 🙏"
+      : "I couldn't answer just now. Please try again in a moment. 🙏";
   };
 
   const formatTime = (d) => d.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true });

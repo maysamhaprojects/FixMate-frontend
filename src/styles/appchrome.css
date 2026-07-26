@@ -1,0 +1,176 @@
+/* ============================================================
+   FixMate — AppChrome (Navbar עליון + Sidebar צד)
+   ============================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@600;700;800;900&family=Heebo:wght@500;600;700;800&display=swap');
+
+/* ── הסטת תוכן כל דף: מתחת לנאבבار ולצד ה-Sidebar ── */
+body.has-chrome .cd-page, body.has-chrome .cp-page, body.has-chrome .bp-page,
+body.has-chrome .si-page, body.has-chrome .mm-page, body.has-chrome .rp-page,
+body.has-chrome .pro-page, body.has-chrome .pp-page, body.has-chrome .av-page,
+body.has-chrome .mo-page {
+  padding-top: 64px;
+  padding-inline-start: 248px;
+  transition: padding-inline-start .3s cubic-bezier(.4,0,.2,1);
+}
+/* כשה-Sidebar מוסתר — התוכן נפרש לרוחב מלא */
+body.has-chrome.sb-hidden .cd-page, body.has-chrome.sb-hidden .cp-page,
+body.has-chrome.sb-hidden .bp-page, body.has-chrome.sb-hidden .si-page,
+body.has-chrome.sb-hidden .mm-page, body.has-chrome.sb-hidden .rp-page,
+body.has-chrome.sb-hidden .pro-page, body.has-chrome.sb-hidden .pp-page,
+body.has-chrome.sb-hidden .av-page, body.has-chrome.sb-hidden .mo-page {
+  padding-inline-start: 0;
+}
+@media (max-width: 900px) {
+  body.has-chrome .cd-page, body.has-chrome .cp-page, body.has-chrome .bp-page,
+  body.has-chrome .si-page, body.has-chrome .mm-page, body.has-chrome .rp-page,
+  body.has-chrome .pro-page, body.has-chrome .pp-page, body.has-chrome .av-page,
+  body.has-chrome .mo-page { padding-inline-start: 0; }
+}
+
+/* ══════════════ Navbar עליון ══════════════ */
+.ac-nav {
+  position: fixed; top: 0; inset-inline: 0; height: 64px; z-index: 320;
+  display: flex; align-items: center; gap: 14px; padding: 0 20px;
+  background: rgba(255,255,255,.82);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+  border-bottom: 1px solid rgba(226,232,240,.9);
+}
+/* כפתור הסתרת/הצגת ה-Sidebar */
+.ac-toggle {
+  width: 40px; height: 40px; border-radius: 11px; flex-shrink: 0;
+  background: #F1F5FB; border: 1px solid #E2E8F0; cursor: pointer;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+  transition: all .2s;
+}
+.ac-toggle:hover { background: #E7EEF9; border-color: #C9D8EC; }
+.ac-toggle span { width: 17px; height: 2px; border-radius: 2px; background: #2B3A55; transition: all .2s; }
+
+.ac-logo { display: flex; align-items: center; gap: 10px; background: none; border: none; cursor: pointer; padding: 0; }
+.ac-logo-icon {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: linear-gradient(135deg, #3B82F6, #2563EB); color: #FFF;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 6px 16px -4px rgba(37,99,235,.55);
+}
+.ac-logo-text { font-family: 'Outfit','Heebo'; font-size: 20px; font-weight: 900; color: #0F1E3D; letter-spacing: -.5px; }
+.ac-logo-accent { color: #2563EB; }
+.ac-logo-tag {
+  font-family: 'Outfit'; font-size: 9px; font-weight: 800; letter-spacing: 1px; color: #FFF;
+  background: linear-gradient(135deg, #7C3AED, #5B21B6); padding: 2px 6px; border-radius: 5px; margin-inline-start: 2px;
+}
+.ac-nav-right { margin-inline-start: auto; display: flex; align-items: center; gap: 10px; }
+
+/* ══════════════ Sidebar צד ══════════════ */
+.ac-side {
+  position: fixed; inset-inline-start: 0; top: 64px; bottom: 0; width: 248px; z-index: 300;
+  overflow: hidden;
+  background: linear-gradient(180deg, #0B1220, #0E1626);   /* בסיס אם תמונה נכשלת */
+  border-inline-end: 1px solid rgba(255,255,255,.06);
+  box-shadow: 8px 0 40px -22px rgba(0,0,0,.55);
+  transform: translateX(-100%);
+  transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+[dir="rtl"] .ac-side { transform: translateX(100%); }
+.ac-side--open { transform: translateX(0); }
+
+/* רקע תמונות — ממלא את כל ה-Sidebar */
+.ac-bg { position: absolute; inset: 0; z-index: 0; }
+.ac-bg-img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transform: scale(1.1);
+  transition: opacity 1.2s ease, transform 6s ease;
+}
+.ac-bg-img--active { opacity: 1; transform: scale(1); }   /* Ken Burns */
+.ac-bg-overlay {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(180deg, rgba(8,12,24,.78) 0%, rgba(8,12,24,.62) 45%, rgba(8,12,24,.82) 100%),
+    radial-gradient(120% 50% at 15% 0%, rgba(37,99,235,.28), transparent 55%);
+}
+
+/* תוכן מעל התמונות */
+.ac-side-content {
+  position: relative; z-index: 1;
+  height: 100%; display: flex; flex-direction: column;
+  padding: 18px 14px 14px;
+}
+
+/* כרטיס זכוכית משותף לאפשרויות — כדי שיבלטו על התמונה */
+.ac-profile, .ac-item, .ac-side-logout {
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+
+/* פרופיל — כרטיס עם אווטאר עגול למעלה */
+.ac-profile {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 13px; margin-bottom: 14px; border-radius: 16px;
+  background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.22);
+  cursor: pointer; transition: all .18s; text-align: start;
+  box-shadow: 0 8px 24px -12px rgba(0,0,0,.6);
+}
+.ac-profile:hover { background: rgba(255,255,255,.2); }
+.ac-profile--active { background: rgba(59,130,246,.42); border-color: rgba(147,197,253,.6); }
+.ac-profile-avatar {
+  width: 48px; height: 48px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: linear-gradient(135deg, #7C3AED, #5B21B6); color: #FFF;
+  font-family: 'Outfit'; font-weight: 800; font-size: 19px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid rgba(255,255,255,.55); box-shadow: 0 6px 18px -6px rgba(0,0,0,.6);
+}
+.ac-profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.ac-profile-meta { display: flex; flex-direction: column; min-width: 0; }
+.ac-profile-name { font-family: 'Heebo','Outfit'; font-size: 14.5px; font-weight: 800; color: #FFF; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-shadow: 0 1px 6px rgba(0,0,0,.5); }
+.ac-profile-link { font-size: 12px; color: #D6E2F5; }
+
+/* קישורי ניווט — כרטיסי זכוכית בולטים */
+.ac-side-nav { display: flex; flex-direction: column; gap: 8px; }
+.ac-item {
+  display: flex; align-items: center; gap: 13px; width: 100%;
+  padding: 13px 15px; border-radius: 14px;
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.16);
+  cursor: pointer;
+  font-family: 'Heebo','Outfit'; font-size: 14.5px; font-weight: 700; color: #EAF1FB;
+  transition: all .18s; position: relative; white-space: nowrap;
+  text-shadow: 0 1px 6px rgba(0,0,0,.5);
+  box-shadow: 0 6px 18px -12px rgba(0,0,0,.6);
+}
+.ac-item:hover { background: rgba(255,255,255,.2); transform: translateX(2px); }
+[dir="rtl"] .ac-item:hover { transform: translateX(-2px); }
+.ac-item-icon { display: flex; flex-shrink: 0; }
+.ac-item-icon svg { width: 19px; height: 19px; }
+.ac-item--active {
+  color: #FFF;
+  background: linear-gradient(135deg, rgba(59,130,246,.95), rgba(37,99,235,.92));
+  border-color: rgba(147,197,253,.7);
+  box-shadow: 0 12px 28px -8px rgba(37,99,235,.9);
+}
+.ac-item--active::before {
+  content: ""; position: absolute; inset-inline-start: -15px; top: 22%; bottom: 22%;
+  width: 4px; border-radius: 0 4px 4px 0; background: #93C5FD; box-shadow: 0 0 12px 2px #60A5FA;
+}
+[dir="rtl"] .ac-item--active::before { inset-inline-start: auto; inset-inline-end: -15px; border-radius: 4px 0 0 4px; }
+
+/* מרווח שדוחף את היציאה לתחתית ה-Sidebar */
+.ac-side-spacer { flex: 1 1 auto; min-height: 16px; }
+
+/* יציאה — מופרדת בתחתית עם קו מפריד */
+.ac-side-foot { padding-top: 12px; border-top: 1px solid rgba(255,255,255,.14); }
+.ac-side-logout {
+  display: flex; align-items: center; gap: 13px; width: 100%;
+  padding: 12px 15px; border-radius: 14px;
+  background: rgba(239,68,68,.16); border: 1px solid rgba(248,113,113,.4);
+  cursor: pointer; backdrop-filter: blur(8px);
+  font-family: 'Heebo','DM Sans'; font-size: 14px; font-weight: 700; color: #FECACA;
+  transition: all .18s; white-space: nowrap; text-shadow: 0 1px 6px rgba(0,0,0,.5);
+}
+.ac-side-logout:hover { background: rgba(239,68,68,.32); color: #FFF; }
+.ac-side-logout svg { width: 18px; height: 18px; flex-shrink: 0; }
+
+/* רקע כהה — מובייל בלבד */
+.ac-scrim { display: none; position: fixed; inset: 0; top: 64px; z-index: 295; background: rgba(6,10,20,.5); backdrop-filter: blur(2px); }
+
+@media (max-width: 900px) {
+  .ac-scrim { display: block; }
+}

@@ -4,6 +4,8 @@
  * =============================================
  */
 
+import AppChrome from "../components/AppChrome";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/auth";
 import { translate, getLang, getDir } from "../context/LanguageContext";
@@ -19,12 +21,35 @@ import "../styles/client.css";
 
 /* אייקוני SVG מיובאים מ-components/Icons.jsx */
 
+/* ── שקופיות ה-Hero: קטגוריות שירות עם תמונות מתחלפות ──
+   תמונות קבועות ורלוונטיות של בעלי מקצוע מ-Pexels (חינמי, ללא ייחוס).
+   מזהי תמונה ספציפיים — לא אקראי — כדי שכל שקופית תתאים לתחום שלה.
+   אם תמונה נכשלת, שכבת הגרדיאנט מאחוריה עדיין נראית מעולה. */
+const px = (id) => `https://images.pexels.com/photos/${id}/pexels-photo-${id}.jpeg?auto=compress&cs=tinysrgb&fit=crop&w=1280&h=560`;
+const HERO_SLIDES = [
+  { key: "electrical", he: "חשמל",     en: "Electrical", icon: "⚡", grad: "linear-gradient(135deg,#F59E0B,#B45309)", img: px(442160) },
+  { key: "plumbing",   he: "שרברבות",  en: "Plumbing",   icon: "🔧", grad: "linear-gradient(135deg,#3B82F6,#1D4ED8)", img: px(29226620) },
+  { key: "ac",         he: "מזגנים",   en: "AC / HVAC",  icon: "❄️", grad: "linear-gradient(135deg,#06B6D4,#0E7490)", img: px(32497161) },
+  { key: "painting",   he: "צביעה",    en: "Painting",   icon: "🎨", grad: "linear-gradient(135deg,#EC4899,#9D174D)", img: px(18369835) },
+  { key: "carpentry",  he: "נגרות",    en: "Carpentry",  icon: "🪚", grad: "linear-gradient(135deg,#D97706,#78350F)", img: px(18947396) },
+  { key: "cleaning",   he: "ניקיון",   en: "Cleaning",   icon: "🧹", grad: "linear-gradient(135deg,#10B981,#065F46)", img: px(4239037) },
+];
+
 export default function ClientDashboard() {
   const navigate = useNavigate();
   var t = translate;
   var dir = getDir();
   var lang = getLang();
   var isHe = lang === "he";
+
+  /* ── קרוסלת ה-Hero: מחליפה שקופית כל 4 שניות ── */
+  const [heroIdx, setHeroIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setHeroIdx((i) => (i + 1) % HERO_SLIDES.length), 4000);
+    return () => clearInterval(id);
+  }, []);
+  const heroSlide = HERO_SLIDES[heroIdx];
+
   /* ── כל הלוגיקה מגיעה מ-hooks/useClientData.js ── */
   const {
     mounted,
@@ -51,93 +76,9 @@ export default function ClientDashboard() {
   return (
     <div className={`cd-page ${mounted ? "cd-page--vis" : ""}`} style={{ direction: dir }}>
 
+
       {/* ═══ NAV ═══ */}
-      <nav className="cd-nav">
-        <div className="cd-nav-inner">
-          <div className="cd-logo">
-            <div className="cd-logo-icon"><IconWrench /></div>
-            <span className="cd-logo-text">Fix<span className="cd-logo-blue">Mate</span></span>
-          </div>
-          <div className="cd-nav-right" style={{ display: "flex", alignItems: "center", gap: 8 }}>
-
-            {/* Notifications */}
-            <div className="cd-notif-wrap">
-              <button className="cd-nav-icon-btn" title={t("cd_notifications")} onClick={() => { setShowNotif(!showNotif); setShowProfile(false); }}>
-                <IconBell />
-                {unreadCount > 0 && <span className="cd-notif-dot">{unreadCount}</span>}
-              </button>
-              {showNotif && (
-                <>
-                  <div className="cd-notif-backdrop" onClick={() => setShowNotif(false)} />
-                  <div className="cd-notif-dropdown">
-                    <div className="cd-notif-header">
-                      <h4 className="cd-notif-title">{t("cd_notifications")}</h4>
-                      {unreadCount > 0 && <button className="cd-notif-mark-all" onClick={markAllRead}>{t("cd_mark_all")}</button>}
-                    </div>
-                    {notifications.length === 0 ? (
-                      <div className="cd-notif-empty"><IconBell /><p>{t("cd_no_notif")}</p></div>
-                    ) : (
-                      <div className="cd-notif-list">
-                        {notifications.map((n) => {
-                          const icon = NOTIF_ICONS[n.type] || NOTIF_ICONS.confirmed;
-                          return (
-                            <div className={`cd-notif-item ${!n.read ? "cd-notif-item--unread" : ""}`} key={n.id} onClick={() => markAsRead(n.id)}>
-                              <div className="cd-notif-icon" style={{ color: icon.color, background: icon.bg }}>{icon.icon}</div>
-                              <div className="cd-notif-content">
-                                <p className="cd-notif-text">{n.text}</p>
-                                <span className="cd-notif-time">{n.time}</span>
-                              </div>
-                              <button className="cd-notif-dismiss" onClick={(e) => { e.stopPropagation(); clearNotification(n.id); }} title="Dismiss">✕</button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                </>
-              )}
-            </div>
-
-            {/* Profile */}
-            <div className="cd-profile-wrap">
-              <button className="cd-nav-icon-btn" title="Profile" onClick={() => { setShowProfile(!showProfile); setShowNotif(false); }} style={avatarPic ? { overflow: "hidden", padding: 0 } : undefined}>
-                {avatarPic ? <img src={avatarPic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover", borderRadius: "50%" }} /> : <IconUser />}
-              </button>
-              {showProfile && (
-                <>
-                  <div className="cd-notif-backdrop" onClick={() => setShowProfile(false)} />
-                  <div className="cd-profile-dropdown">
-                    <div className="cd-profile-header">
-                      <div className="cd-profile-avatar" style={{ overflow: "hidden", padding: 0 }}>
-                        {avatarPic ? <img src={avatarPic} alt="" style={{ width: "100%", height: "100%", objectFit: "cover" }} /> : (userName.charAt(0) || "U").toUpperCase()}
-                      </div>
-                      <div className="cd-profile-info">
-                        <h4 className="cd-profile-name">{userName}</h4>
-                        <p className="cd-profile-email">{userEmail || (isHe ? "טוען..." : "Loading...")}</p>
-                      </div>
-                    </div>
-                    <div className="cd-profile-menu">
-                      <button className="cd-profile-menu-item" onClick={() => { setShowProfile(false); navigate("/client/profile"); }}><IconEdit /><span>{t("cd_edit_profile")}</span></button>
-                      <button className="cd-profile-menu-item" onClick={() => setShowProfile(false)}><IconHistory /><span>{t("cd_order_history")}</span></button>
-                      <button className="cd-profile-menu-item" onClick={() => setShowProfile(false)}><IconHeart /><span>{t("cd_saved_pros")}</span></button>
-                      <button className="cd-profile-menu-item" onClick={() => setShowProfile(false)}><IconSettings /><span>{t("cd_settings")}</span></button>
-                      <button className="cd-profile-menu-item" onClick={() => { setShowProfile(false); openComplaint(); }}>
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-                        <span>{isHe ? "הגש תלונה" : "File a complaint"}</span>
-                      </button>
-                    </div>
-                    <div className="cd-profile-footer">
-                      <button className="cd-profile-logout" onClick={() => logout(navigate)}><IconLogout /><span>{t("cd_logout")}</span></button>
-                    </div>
-                  </div>
-                </>
-              )}
-            </div>
-
-            <button className="cd-nav-icon-btn cd-logout-btn" title={t("cd_logout")} onClick={() => logout(navigate)}><IconLogout /></button>
-          </div>
-        </div>
-      </nav>
+      <AppChrome />
 
       {/* ═══ MAIN ═══ */}
       <main className="cd-main">
@@ -145,6 +86,65 @@ export default function ClientDashboard() {
         <section className="cd-greeting">
           <h1 className="cd-greeting-title">{t("cd_hello")} <span className="cd-greeting-name">{userName}</span></h1>
           <p className="cd-greeting-sub">{t("cd_sub")}</p>
+        </section>
+
+        {/* ═══ HERO — קרוסלת קטגוריות שירות מפוארת ═══ */}
+        <section className="cd-hero" dir={dir}>
+          {/* שכבות התמונות — כל אחת מופיעה בתורה עם zoom איטי */}
+          {HERO_SLIDES.map((s, i) => (
+            <div
+              key={s.key}
+              className={"cd-hero-slide" + (i === heroIdx ? " cd-hero-slide--active" : "")}
+              style={{ background: s.grad }}
+            >
+              <img
+                className="cd-hero-img"
+                src={s.img}
+                alt={isHe ? s.he : s.en}
+                loading="lazy"
+                onError={(e) => { e.currentTarget.style.display = "none"; }}
+              />
+            </div>
+          ))}
+
+          {/* שכבת כהות + תוכן */}
+          <div className="cd-hero-scrim" />
+          <div className="cd-hero-content">
+            <div className="cd-hero-badge">
+              <span className="cd-hero-badge-icon">{heroSlide.icon}</span>
+              <span>{isHe ? heroSlide.he : heroSlide.en}</span>
+            </div>
+            <h2 className="cd-hero-title">
+              {isHe ? "בעלי מקצוע מובחרים, בלחיצת כפתור" : "Top professionals, one tap away"}
+            </h2>
+            <p className="cd-hero-sub">
+              {isHe
+                ? "מצא, השווה והזמן בעל מקצוע מאומת לכל תקלה בבית — במהירות ובביטחון."
+                : "Find, compare and book a verified pro for any home issue — fast and safely."}
+            </p>
+            <div className="cd-hero-actions">
+              <button className="cd-hero-btn cd-hero-btn--primary" onClick={() => navigate("/client/search")}>
+                <IconSearch />
+                <span>{isHe ? "הזמן בעל מקצוע" : "Book a pro"}</span>
+              </button>
+              <button className="cd-hero-btn cd-hero-btn--ghost" onClick={() => navigate("/client/snap")}>
+                <IconCamera />
+                <span>{isHe ? "צלם תקלה" : "Snap an issue"}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* נקודות ניווט */}
+          <div className="cd-hero-dots">
+            {HERO_SLIDES.map((s, i) => (
+              <button
+                key={s.key}
+                className={"cd-hero-dot" + (i === heroIdx ? " cd-hero-dot--active" : "")}
+                onClick={() => setHeroIdx(i)}
+                aria-label={isHe ? s.he : s.en}
+              />
+            ))}
+          </div>
         </section>
 
         {/* ═══ STATS SUMMARY (נתונים אמיתיים) ═══ */}

@@ -19,6 +19,7 @@
  * =============================================
  */
 
+import AppChrome from "../components/AppChrome";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useProOrders } from "../hooks/useProOrders";
@@ -53,17 +54,7 @@ export default function ManageOrders() {
     }}>
 
       {/* ══ NAVBAR ══ */}
-      <nav className="mo-nav">
-        <div className="mo-nav-inner">
-          <div className="mo-logo">
-            <div className="mo-logo-badge"><IconWrench /></div>
-            <span className="mo-logo-text">Fix<b>Mate</b> <span className="mo-logo-tag">Pro</span></span>
-          </div>
-          <button className="flt-btn mo-back-btn" onClick={() => navigate("/pro/dashboard")}>
-            <IconBack /> {isHe ? "חזרה לדשבורד" : "Back to Dashboard"}
-          </button>
-        </div>
-      </nav>
+      <AppChrome />
 
       {/* ══ MAIN ══ */}
       <main className="mo-main">

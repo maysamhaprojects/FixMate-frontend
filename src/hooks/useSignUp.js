@@ -228,6 +228,7 @@ export function useSignUp({ isHe, navigate }) {
         phone: fullPhone,
         role: role.toUpperCase(),
       };
+      if (avatarPreview) body.profilePicture = avatarPreview;   // תמונת פרופיל (base64), אם הועלתה
       if (role === "professional") {
         body.specialty = selectedCategories[0] || "";              // הקטגוריה הראשית (למשל plumbing)
         body.location = address;                                    // העיר שנבחרה
@@ -252,6 +253,7 @@ export function useSignUp({ isHe, navigate }) {
         localStorage.setItem("token", data.token);
         localStorage.setItem("role", data.role);
         localStorage.setItem("fullName", data.fullName);
+        localStorage.setItem("profilePicture", avatarPreview || "");  // תצוגה מיידית בדשבורד
         setStep(4);
       }
     } catch (error) {

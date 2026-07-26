@@ -9,6 +9,7 @@
   עיצוב    → styles/proProfile.css
 */
 
+import AppChrome from "../components/AppChrome";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useProProfile } from "../hooks/useProProfile";
@@ -51,19 +52,20 @@ export default function ProProfile() {
   const fieldCls = (extra = "") => "pp-input" + (editing ? " pp-input--active" : "") + (extra ? " " + extra : "");
 
   return (
-    <div className="pp-page" style={{
-      fontFamily: isHe ? "'Heebo',sans-serif" : "'DM Sans',sans-serif",
-      direction: dir,
-      textAlign: isRTL ? "right" : "left",
-      opacity: mounted ? 1 : 0,
-    }}>
+    <>
+      {/* ── NAV (מחוץ ל-pp-page כדי שה-reset של הדף לא ישפיע עליו) ── */}
+      <AppChrome />
 
-      {/* ── NAV ── */}
-      <nav className="pp-nav">
+      <div className="pp-page" style={{
+        fontFamily: isHe ? "'Heebo',sans-serif" : "'DM Sans',sans-serif",
+        direction: dir,
+        textAlign: isRTL ? "right" : "left",
+        opacity: mounted ? 1 : 0,
+      }}>
+
+      {/* שורת פעולה — כותרת + עריכה/שמירה */}
+      <div className="pp-actionbar">
         <div className="pp-nav-inner">
-          <button className="pp-back-btn" onClick={goBack}>
-            {isRTL ? <IconForward /> : <IconBack />}
-          </button>
           <span className="pp-nav-title">{isHe ? "הפרופיל שלי" : "My Profile"}</span>
           {!editing ? (
             <button className="hb pp-btn-edit" onClick={() => setEditing(true)}>
@@ -80,7 +82,7 @@ export default function ProProfile() {
             </div>
           )}
         </div>
-      </nav>
+      </div>
 
       {/* ── TOAST ── */}
       {saved && (
@@ -292,6 +294,7 @@ export default function ProProfile() {
           )}
         </div>
       </div>
-    </div>
+      </div>
+    </>
   );
 }

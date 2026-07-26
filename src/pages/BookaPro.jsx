@@ -1,21 +1,26 @@
+import AppChrome from "../components/AppChrome";
 import { useNavigate } from "react-router-dom";
 import { useLang, LangToggle } from "../context/LanguageContext";
 import { useBooking } from "../hooks/useBooking";
-import { IconBack, IconForward, IconCheck, IconLocation, IconClock, IconX, IconSearch, IconPin, IconCalendar, IconClockLg, IconCamera, IconSend } from "../components/BookIcons";
+import { IconBack, IconForward, IconCheck, IconLocation, IconClock, IconX, IconSearch, IconPin, IconCalendar, IconClockLg } from "../components/BookIcons";
 import { catIcons, CAT_LABEL_KEYS, TIME_OPTIONS } from "../data/bookingCatalog";
 import "../styles/bookaPro.css";
 
 /*
-  FixMate - Book a Pro (with AI Chatbot Step 1)
-  Step 1: Photo upload + AI chatbot identifies issue
-  Step 2: Fill location + date + time
-  Step 3: Show professionals → book
+  FixMate - Book a Pro (מסלול ידני ישיר)
+  Step 1: בחירת תחום (רשת קטגוריות)
+  Step 2: מיקום + תאריך + שעה
+  Step 3: הצגת בעלי מקצוע → הזמנה
+  (מי שלא בטוח מה הבעיה → מופנה ל-Snap Issue עם ה-AI האמיתי)
 
   אייקונים → components/BookIcons.jsx
   קטלוג    → data/bookingCatalog.js
   לוגיקה   → hooks/useBooking.js
   עיצוב    → styles/bookaPro.css
 */
+
+/* סדר הצגת התחומים ברשת הבחירה */
+const BOOK_CATEGORIES = ["electricity", "plumbing", "ac", "painting", "carpentry", "locksmith", "renovation", "cleaning"];
 
 export default function BookaPro() {
   const navigate = useNavigate();
@@ -27,8 +32,7 @@ export default function BookaPro() {
   const {
     step,
     cat, catLabel, issueLabel, timeLabel,
-    msgs, chatInput, setChatInput, analyzing, diagnosis,
-    fileRef, chatEndRef, handlePhoto, handleTextSend, confirmDiagnosis,
+    pickCategory,
     cityQ, setCityQ, city, setCity, dd, setDd,
     date, setDate, time, setTime,
     filtered, ready, today, fmtDate,
@@ -41,15 +45,6 @@ export default function BookaPro() {
 
   const BackIcon = isRTL ? IconForward : IconBack;
 
-  const renderBotText = (text) => {
-    const parts = text.split(/(\*\*[^*]+\*\*)/g);
-    return parts.map((p, i) =>
-      p.startsWith("**") && p.endsWith("**")
-        ? <strong key={i} className="bp-bot-strong">{p.slice(2, -2)}</strong>
-        : p.includes("\n\n") ? <span key={i}>{p.split("\n\n").map((s, j) => <span key={j}>{j > 0 && <><br /><br /></>}{s}</span>)}</span> : p
-    );
-  };
-
   /* מחלקת שדה — נצבע בכחול כשיש ערך */
   const fldCls = (filled, extra = "") => "bp-fld" + (filled ? " bp-fld--filled" : "") + (extra ? " " + extra : "");
 
@@ -57,13 +52,7 @@ export default function BookaPro() {
     <div className="bp-page" dir={dir} style={{ textAlign: isRTL ? "right" : "left" }}>
 
       {/* NAV */}
-      <nav className="bp-nav">
-        <div className="bp-nav-inner">
-          <button className="bp-back-btn" onClick={goBack}><BackIcon /></button>
-          <span className="bp-nav-title">{t("bp_title")}</span>
-          <LangToggle />
-        </div>
-      </nav>
+      <AppChrome />
 
       {/* STEPPER */}
       <div className="bp-stepper-wrap">
@@ -74,7 +63,7 @@ export default function BookaPro() {
             return (
               <div key={s} className="bp-step">
                 <div className={"bp-step-circle" + (done ? " bp-step-circle--done" : "") + (now ? " bp-step-circle--now" : "")}>
-                  {(step > s || (s <= 2 && results)) ? <IconCheck /> : s === 1 ? "📷" : s === 2 ? "📍" : "👷"}
+                  {(step > s || (s <= 2 && results)) ? <IconCheck /> : s === 1 ? "🧰" : s === 2 ? "📍" : "👷"}
                 </div>
                 {i < 2 && (
                   <div className={"bp-step-line" + ((step > s || (s === 1 && step >= 2) || (s === 2 && results)) ? " bp-step-line--done" : "")} />
@@ -84,7 +73,7 @@ export default function BookaPro() {
           })}
         </div>
         <div className="bp-step-labels">
-          {[isHe ? "צלם תקלה" : "Snap Issue", isHe ? "מיקום וזמן" : "When & Where", isHe ? "בחר מקצוען" : "Choose Pro"].map((l, i) => (
+          {[isHe ? "בחר שירות" : "Choose Service", isHe ? "מיקום וזמן" : "When & Where", isHe ? "בחר מקצוען" : "Choose Pro"].map((l, i) => (
             <span key={i} className={"bp-step-label" + (step >= i + 1 ? " bp-step-label--active" : "")}>{l}</span>
           ))}
         </div>
@@ -92,89 +81,28 @@ export default function BookaPro() {
 
       <div className="bp-body">
 
-        {/* ==================== STEP 1: CHATBOT ==================== */}
+        {/* ==================== STEP 1: CHOOSE SERVICE ==================== */}
         {step === 1 && (
-          <div className="bp-chat">
-            {/* Chat header */}
-            <div className="bp-chat-head">
-              <div className="bp-bot-avatar">🤖</div>
-              <div>
-                <div className="bp-bot-name">{isHe ? "עוזר חכם" : "Smart Assistant"}</div>
-                <div className="bp-bot-status">
-                  <span className="bp-bot-dot" />
-                  {isHe ? "מוכן לניתוח" : "Ready to analyze"}
-                </div>
-              </div>
-            </div>
+          <div className="bp-catpick">
+            <h2 className="bp-catpick-title">{isHe ? "איזה שירות דרוש לך?" : "What service do you need?"}</h2>
+            <p className="bp-catpick-sub">
+              {isHe ? "בחרו תחום ונמצא לכם בעל מקצוע מאומת ופנוי" : "Pick a category and we'll find you a verified, available pro"}
+            </p>
 
-            {/* Chat messages */}
-            <div className="bp-msgs">
-              {msgs.map((m, i) => (
-                <div key={i} className={"bp-msg-row" + (m.role === "user" ? " bp-msg-row--user" : "")}>
-                  <div className={"bp-bubble" + (m.role === "user" ? " bp-bubble--user" : "") + (m.image ? " bp-bubble--img" : "")}>
-                    {m.image ? <img src={m.image} alt="Issue" /> : renderBotText(m.text)}
-                  </div>
-                </div>
+            <div className="bp-cat-grid">
+              {BOOK_CATEGORIES.map(id => (
+                <button key={id} type="button" className="bp-cat-card" onClick={() => pickCategory(id)}>
+                  <span className="bp-cat-ico">{catIcons[id]}</span>
+                  <span className="bp-cat-name">{t(CAT_LABEL_KEYS[id])}</span>
+                </button>
               ))}
-
-              {/* Analyzing dots */}
-              {analyzing && (
-                <div className="bp-msg-row">
-                  <div className="bp-typing">
-                    {[0, 1, 2].map(d => (
-                      /* ההשהיה שונה לכל נקודה כדי ליצור גל — לכן inline */
-                      <span key={d} className="bp-typing-dot" style={{ animation: `pulse 1.2s ease-in-out ${d * 0.2}s infinite` }} />
-                    ))}
-                    <span className="bp-typing-text">{isHe ? "מנתח..." : "Analyzing..."}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Confirm button after diagnosis */}
-              {diagnosis && !analyzing && (
-                <div className="bp-confirm-row">
-                  <button className="hb bp-confirm-btn" onClick={confirmDiagnosis}>
-                    <IconCheck />
-                    {isHe ? `אשר! תמצא לי ${t(CAT_LABEL_KEYS[diagnosis.cat])}` : `Got it! Find me a ${t(CAT_LABEL_KEYS[diagnosis.cat])}`}
-                  </button>
-                </div>
-              )}
-
-              <div ref={chatEndRef} />
             </div>
 
-            {/* Input bar */}
-            <div className="bp-inputbar">
-              <div className="bp-inputbar-row">
-                {/* Camera button */}
-                <button className="bp-cam-btn" onClick={() => fileRef.current?.click()} title={isHe ? "צלם תמונה" : "Upload photo"}>
-                  <IconCamera />
-                </button>
-                <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} style={{ display: "none" }} />
-
-                {/* Text input */}
-                <div className="bp-text-wrap">
-                  <input
-                    className="bp-text-input"
-                    type="text"
-                    value={chatInput}
-                    onChange={e => setChatInput(e.target.value)}
-                    onKeyDown={e => e.key === "Enter" && !e.shiftKey && handleTextSend()}
-                    placeholder={isHe ? "תאר את התקלה או צלם..." : "Describe the issue or snap a photo..."}
-                    disabled={analyzing}
-                  />
-                </div>
-
-                {/* Send button */}
-                <button
-                  className={"bp-send-btn" + (chatInput.trim() && !analyzing ? " bp-send-btn--on" : "")}
-                  onClick={handleTextSend}
-                  disabled={!chatInput.trim() || analyzing}
-                >
-                  <IconSend />
-                </button>
-              </div>
-            </div>
+            {/* למי שלא בטוח מה הבעיה — הפניה ל-AI האמיתי */}
+            <button className="bp-catpick-ai" type="button" onClick={() => navigate("/client/snap")}>
+              <span className="bp-catpick-ai-emoji">🤖</span>
+              {isHe ? "לא בטוחים מה הבעיה? שאלו את עוזר ה-AI שלנו" : "Not sure what's wrong? Ask our AI assistant"}
+            </button>
           </div>
         )}
 

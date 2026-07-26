@@ -71,6 +71,50 @@
 
 .bp-body { max-width: 900px; margin: 0 auto; padding: 20px 24px 40px; }
 
+/* ════════ STEP 1 — בחירת תחום ════════ */
+.bp-catpick { animation: fadeUp .4s; text-align: center; }
+.bp-catpick-title { font-family: 'Outfit'; font-size: 24px; font-weight: 800; color: #1A2B4A; margin-bottom: 6px; }
+.bp-catpick-sub { font-size: 14.5px; color: #64748B; margin-bottom: 26px; }
+
+.bp-cat-grid {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
+}
+.bp-cat-card {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+  padding: 26px 14px; border-radius: 18px;
+  background: #FFF; border: 1.5px solid #E8ECF4; cursor: pointer;
+  font-family: inherit; transition: all .18s;
+  box-shadow: 0 4px 16px -12px rgba(15,30,61,.4);
+}
+.bp-cat-card:hover {
+  border-color: #2563EB; transform: translateY(-4px);
+  box-shadow: 0 16px 32px -18px rgba(37,99,235,.55);
+}
+.bp-cat-ico {
+  width: 62px; height: 62px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center; font-size: 30px;
+  background: linear-gradient(135deg,#EFF4FF,#E0EAFF);
+  transition: all .18s;
+}
+.bp-cat-card:hover .bp-cat-ico { background: linear-gradient(135deg,#2563EB,#1D4ED8); transform: scale(1.06); }
+.bp-cat-name { font-family: 'Heebo','Outfit'; font-size: 15px; font-weight: 700; color: #1A2B4A; }
+
+.bp-catpick-ai {
+  display: inline-flex; align-items: center; gap: 9px; margin-top: 28px;
+  padding: 12px 22px; border-radius: 999px;
+  background: #F5F3FF; border: 1.5px solid #E4DBFB; cursor: pointer;
+  font-family: 'Heebo','Outfit'; font-size: 14px; font-weight: 700; color: #6D28D9;
+  transition: all .18s;
+}
+.bp-catpick-ai:hover { background: #EDE9FE; border-color: #C4B5FD; transform: translateY(-1px); }
+.bp-catpick-ai-emoji { font-size: 17px; }
+
+@media (max-width: 560px) {
+  .bp-cat-grid { grid-template-columns: repeat(2, 1fr); gap: 11px; }
+  .bp-cat-card { padding: 20px 10px; }
+  .bp-cat-ico { width: 54px; height: 54px; font-size: 26px; }
+}
+
 /* ════════ STEP 1 — צ'אט ════════ */
 .bp-chat {
   background: #FFF; border-radius: 20px;

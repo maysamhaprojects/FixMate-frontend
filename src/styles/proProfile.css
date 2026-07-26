@@ -288,3 +288,7 @@
   .pp-hero-info { text-align: center; }
   .pp-hero-info > div { justify-content: center; }
 }
+
+/* שורת פעולה מתחת ל-AppChrome (כותרת + עריכה/שמירה) */
+.pp-actionbar { max-width: 960px; margin: 0 auto; padding: 18px 24px 0; }
+.pp-actionbar .pp-nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

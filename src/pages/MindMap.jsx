@@ -1,3 +1,4 @@
+import AppChrome from "../components/AppChrome";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
@@ -32,7 +33,10 @@ export default function MindMap() {
     <div className="mm-page" dir={dir} style={{ fontFamily: isHe ? "'Heebo',sans-serif" : "'DM Sans',sans-serif" }}>
 
       {/* NAV */}
-      <nav className="mm-nav">
+      <AppChrome />
+
+      {/* שורת כותרת + חזרה לרשימה בעת צפייה במדריך */}
+      <div className="mm-actionbar">
         <div className="mm-nav-inner">
           <div className="mm-nav-mid">
             <span className="mm-nav-title">
@@ -44,11 +48,13 @@ export default function MindMap() {
                 : (isHe ? "פתרו תקלות נפוצות בעצמכם" : "Fix common problems yourself")}
             </span>
           </div>
-          <button className="mm-back-btn" onClick={() => (selectedId ? setSelectedId(null) : navigate("/client/dashboard"))}>
-            <IconBack />
-          </button>
+          {selectedId && (
+            <button className="mm-back-btn" onClick={() => setSelectedId(null)}>
+              <IconBack /> {isHe ? "לרשימה" : "Back"}
+            </button>
+          )}
         </div>
-      </nav>
+      </div>
 
       {guide ? (
         <StepGuide guide={guide} isHe={isHe} navigate={navigate} />

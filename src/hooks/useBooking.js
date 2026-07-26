@@ -10,21 +10,12 @@ import { useState, useRef, useEffect } from "react";
 import { getPros } from "../services/client";
 import { createBooking } from "../services/booking";
 import { ISRAEL_CITIES } from "../data/israelCities";
-import { catIcons, CAT_MATCH, CAT_LABEL_KEYS, getDiagnosis, getDiagnosisFromText, TIME_OPTIONS } from "../data/bookingCatalog";
+import { catIcons, CAT_MATCH, CAT_LABEL_KEYS, TIME_OPTIONS } from "../data/bookingCatalog";
 
 export function useBooking({ t, lang, isHe, navigate }) {
   const [step, setStep] = useState(1);
   const [cat, setCat] = useState(null);
   const [issue, setIssue] = useState(null);
-
-  /* Chat state */
-  const [msgs, setMsgs] = useState([]);
-  const [chatInput, setChatInput] = useState("");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [diagnosis, setDiagnosis] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileRef = useRef(null);
-  const chatEndRef = useRef(null);
 
   /* Step 2+3 state */
   const [cityQ, setCityQ] = useState("");
@@ -49,11 +40,6 @@ export function useBooking({ t, lang, isHe, navigate }) {
   const ready = city && date && time;
   const today = new Date().toISOString().split("T")[0];
 
-  /* Auto-scroll chat */
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs, analyzing]);
-
   /* Close city dropdown on outside click */
   useEffect(() => {
     const h = (e) => {
@@ -63,14 +49,6 @@ export function useBooking({ t, lang, isHe, navigate }) {
     document.addEventListener("mousedown", h);
     return () => document.removeEventListener("mousedown", h);
   }, []);
-
-  /* Initial bot greeting */
-  useEffect(() => {
-    const greeting = isHe
-      ? "שלום! 👋 אני העוזר החכם של FixMate. צלם את התקלה או תאר אותה — ואני אזהה את סוג הבעיה ואמצא לך בעל מקצוע."
-      : "Hi there! 👋 I'm FixMate's smart assistant. Snap a photo of the issue or describe it — and I'll identify the problem and find you the right professional.";
-    setMsgs([{ role: "bot", text: greeting }]);
-  }, [isHe]);
 
   const catLabel = cat ? t(CAT_LABEL_KEYS[cat]) : "";
   const issueLabel = issue ? t(`bp_iss_${issue}`) : "";
@@ -161,59 +139,25 @@ export function useBooking({ t, lang, isHe, navigate }) {
     else navigate("/client/dashboard");
   };
 
-  const handlePhoto = (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const url = ev.target.result;
-      setImagePreview(url);
-      setMsgs(prev => [...prev, { role: "user", image: url }]);
-      runAnalysis(null);
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const handleTextSend = () => {
-    const txt = chatInput.trim();
-    if (!txt) return;
-    setMsgs(prev => [...prev, { role: "user", text: txt }]);
-    setChatInput("");
-    const textDiag = getDiagnosisFromText(txt);
-    runAnalysis(textDiag);
-  };
-
-  const runAnalysis = (textDiag) => {
-    setAnalyzing(true);
-    const delay = 1500 + Math.random() * 1500;
-    setTimeout(() => {
-      const diag = textDiag || getDiagnosis();
-      setDiagnosis(diag);
-      setCat(diag.cat);
-      setIssue(diag.issue);
-      const langData = isHe ? diag.he : diag.en;
-      const botMsg = `**${langData.title}** ${catIcons[diag.cat]}\n\n${langData.desc}`;
-      setMsgs(prev => [...prev, { role: "bot", text: botMsg }]);
-      setAnalyzing(false);
-    }, delay);
-  };
-
-  const confirmDiagnosis = () => {
-    setStep(2);
+  /* בחירת תחום ידנית (שלב 1) — הלקוח יודע מה הוא צריך, בוחר תחום ועובר
+     ישר לשלב "מתי והיכן". ללא אבחון אוטומטי — ה-AI האמיתי נמצא ב-Snap Issue. */
+  const pickCategory = (catId) => {
+    setCat(catId);
+    setIssue(null);
     setCity(null);
     setCityQ("");
     setDate("");
     setTime("");
     setResults(false);
+    setStep(2);
   };
 
   return {
     step, setStep,
     cat, issue, catLabel, issueLabel, timeLabel,
 
-    /* צ'אט */
-    msgs, chatInput, setChatInput, analyzing, diagnosis, imagePreview,
-    fileRef, chatEndRef, handlePhoto, handleTextSend, confirmDiagnosis,
+    /* בחירת תחום (שלב 1) */
+    pickCategory,
 
     /* עיר / תאריך / שעה */
     cityQ, setCityQ, city, setCity, dd, setDd,

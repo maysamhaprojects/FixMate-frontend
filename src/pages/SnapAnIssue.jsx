@@ -1,3 +1,4 @@
+import AppChrome from "../components/AppChrome";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useSnapIssue } from "../hooks/useSnapIssue";
@@ -147,16 +148,7 @@ export default function SnapAnIssue() {
     <div className="si-page" dir={dir} style={{ textAlign: isHe ? "right" : "left" }}>
 
       {/* NAV */}
-      <nav className="si-nav">
-        <div className="si-nav-inner">
-          <button className="si-back-btn" onClick={() => navigate("/client/dashboard")}><IconBack /></button>
-          <div className="si-nav-mid">
-            <span className="si-nav-title">Snap an Issue</span>
-            <span className="si-nav-sub">AI-Powered Diagnosis</span>
-          </div>
-          <div className="si-nav-spacer" />
-        </div>
-      </nav>
+      <AppChrome />
 
       {/* CHAT AREA */}
       <div className="si-chat" ref={chatRef}>
@@ -175,19 +167,6 @@ export default function SnapAnIssue() {
           </div>
         )}
 
-        {/* Quick select buttons - show only at start */}
-        {messages.length <= 1 && !analyzing && (
-          <div className="si-quick">
-            <p className="si-quick-label">Common issues:</p>
-            <div className="si-quick-row">
-              {ISSUE_CATEGORIES.map((cat) => (
-                <button key={cat.id} className="quickBtn" onClick={() => handleQuickSelect(cat.id)}>
-                  <span>{cat.icon}</span> {cat.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Image preview */}
@@ -207,12 +186,6 @@ export default function SnapAnIssue() {
       {/* INPUT BAR */}
       <div className="si-inputbar">
         <div className="si-inputbar-inner">
-          {/* Camera button */}
-          <button className="si-icon-btn si-icon-btn--cam" onClick={() => fileRef.current?.click()}>
-            <IconCamera />
-          </button>
-          <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleImageUpload} style={{ display: "none" }} />
-
           {/* Gallery button */}
           <button
             className="si-icon-btn si-icon-btn--gallery"

@@ -8,6 +8,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import "../styles/global.css";
 import { useLang, LangToggle } from "../context/LanguageContext";
+import { LEGAL_TERMS, LEGAL_PRIVACY } from "../data/legalContent";
 
 /* --- LARGE SVG: Handyman Illustration --- */
 const HandymanIllustration = function() {
@@ -160,6 +161,11 @@ export default function LandingPage() {
   var scrolled = _scroll[0];
   var setScrolled = _scroll[1];
 
+  // מודאל משפטי — "terms" / "privacy" / null
+  var _legal = useState(null);
+  var legalModal = _legal[0];
+  var setLegalModal = _legal[1];
+
   useEffect(function() {
     var h = function() { setScrolled(window.scrollY > 50); };
     window.addEventListener("scroll", h);
@@ -246,7 +252,7 @@ export default function LandingPage() {
               <button className="land-btn-blue land-btn-lg" onClick={function() { navigate("/register"); }}>
                 {isHe ? "\u05d4\u05ea\u05d7\u05d9\u05dc\u05d5 \u05d1\u05d7\u05d9\u05e0\u05dd" : "Get Started Free"} <IconArrowRight />
               </button>
-              <button className="land-btn-outline land-btn-lg" onClick={function() { navigate("/register"); }}>
+              <button className="land-btn-outline land-btn-lg" onClick={function() { navigate("/client/snap"); }}>
                 <IconCamera /> {isHe ? "\u05e6\u05dc\u05de\u05d5 \u05ea\u05e7\u05dc\u05d4" : "Snap Your Issue"}
               </button>
             </div>
@@ -359,13 +365,61 @@ export default function LandingPage() {
             </div>
             <div className="land-footer-col">
               <h4>{isHe ? "\u05de\u05e9\u05e4\u05d8\u05d9" : "Legal"}</h4>
-              <a href="#">{isHe ? "\u05de\u05d3\u05d9\u05e0\u05d9\u05d5\u05ea \u05e4\u05e8\u05d8\u05d9\u05d5\u05ea" : "Privacy Policy"}</a>
-              <a href="#">{isHe ? "\u05ea\u05e0\u05d0\u05d9 \u05e9\u05d9\u05de\u05d5\u05e9" : "Terms of Service"}</a>
+              <a href="#" onClick={function(e) { e.preventDefault(); setLegalModal("privacy"); }}>{isHe ? "\u05de\u05d3\u05d9\u05e0\u05d9\u05d5\u05ea \u05e4\u05e8\u05d8\u05d9\u05d5\u05ea" : "Privacy Policy"}</a>
+              <a href="#" onClick={function(e) { e.preventDefault(); setLegalModal("terms"); }}>{isHe ? "\u05ea\u05e0\u05d0\u05d9 \u05e9\u05d9\u05de\u05d5\u05e9" : "Terms of Service"}</a>
             </div>
           </div>
         </div>
         <div className="land-footer-bottom">{isHe ? "\u00a9 2026 \u05e4\u05d9\u05e7\u05e1\u05de\u05d9\u05d9\u05d8. \u05db\u05dc \u05d4\u05d6\u05db\u05d5\u05d9\u05d5\u05ea \u05e9\u05de\u05d5\u05e8\u05d5\u05ea." : "\u00a9 2026 FixMate. All rights reserved."}</div>
       </footer>
+
+      {/* --- LEGAL MODAL --- */}
+      {legalModal && (
+        <div onClick={function() { setLegalModal(null); }}
+          style={{ position: "fixed", inset: 0, background: "rgba(15,23,42,.55)", zIndex: 1000, display: "flex", alignItems: "center", justifyContent: "center", padding: "24px 16px" }}>
+          <div onClick={function(e) { e.stopPropagation(); }} dir={dir}
+            style={{ width: "100%", maxWidth: 560, background: "#FFF", borderRadius: 18, boxShadow: "0 24px 60px rgba(0,0,0,.3)", overflow: "hidden", maxHeight: "85vh", display: "flex", flexDirection: "column" }}>
+
+            {/* \u05db\u05d5\u05ea\u05e8\u05ea */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "18px 24px", borderBottom: "1px solid #EEF1F6" }}>
+              <h2 style={{ fontFamily: "'Outfit', sans-serif", fontSize: 19, fontWeight: 800, color: "#1A2B4A", margin: 0 }}>
+                {legalModal === "terms"
+                  ? (isHe ? "\u05ea\u05e0\u05d0\u05d9 \u05e9\u05d9\u05de\u05d5\u05e9" : "Terms of Service")
+                  : (isHe ? "\u05de\u05d3\u05d9\u05e0\u05d9\u05d5\u05ea \u05e4\u05e8\u05d8\u05d9\u05d5\u05ea" : "Privacy Policy")}
+              </h2>
+              <button type="button" onClick={function() { setLegalModal(null); }}
+                style={{ border: "none", background: "none", cursor: "pointer", color: "#94A3B8", display: "flex", padding: 4 }}>
+                <IconX />
+              </button>
+            </div>
+
+            {/* \u05ea\u05d5\u05db\u05df */}
+            <div style={{ overflowY: "auto", padding: "20px 24px", fontSize: 14, lineHeight: 1.7, color: "#374151" }}>
+              <p style={{ fontSize: 12, color: "#94A3B8", marginBottom: 16 }}>
+                {isHe ? "\u05e2\u05d5\u05d3\u05db\u05df \u05dc\u05d0\u05d7\u05e8\u05d5\u05e0\u05d4: \u05d9\u05d5\u05dc\u05d9 2026" : "Last updated: July 2026"}
+              </p>
+              {(legalModal === "terms" ? LEGAL_TERMS : LEGAL_PRIVACY).map(function(sec, i) {
+                return (
+                  <div key={i} style={{ marginBottom: 16 }}>
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: "#1A2B4A", marginBottom: 6 }}>
+                      {isHe ? sec.titleHe : sec.titleEn}
+                    </h3>
+                    <p style={{ margin: 0 }}>{isHe ? sec.bodyHe : sec.bodyEn}</p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* \u05db\u05e4\u05ea\u05d5\u05e8 \u05e1\u05d2\u05d9\u05e8\u05d4 */}
+            <div style={{ padding: "16px 24px", borderTop: "1px solid #EEF1F6", display: "flex", justifyContent: "flex-end" }}>
+              <button type="button" onClick={function() { setLegalModal(null); }}
+                style={{ padding: "10px 22px", borderRadius: 12, border: "none", background: "linear-gradient(135deg,#2563EB,#1D4ED8)", color: "#FFF", fontSize: 14, fontWeight: 700, cursor: "pointer", fontFamily: "inherit" }}>
+                {isHe ? "\u05e1\u05d2\u05d9\u05e8\u05d4" : "Close"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

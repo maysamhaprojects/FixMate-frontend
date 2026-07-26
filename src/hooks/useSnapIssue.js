@@ -16,7 +16,7 @@ export function useSnapIssue({ isHe, L }) {
       from: "bot",
       text: isHe
         ? "שלום! 👋 אני עוזר ה-AI של FixMate. העלו תמונה של התקלה או תארו אותה, ואנסה לעזור לכם לתקן בעצמכם!"
-        : "Hi! 👋 I'm FixMate AI Assistant. Upload a photo of your issue, or select a common problem below, and I'll try to help you fix it yourself!",
+        : "Hi! 👋 I'm FixMate AI Assistant. Upload a photo of your issue or describe it, and I'll try to help you fix it yourself!",
       time: new Date(),
     },
   ]);

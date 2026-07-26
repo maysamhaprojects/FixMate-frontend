@@ -1,3 +1,0 @@
-# FixMate
-
-First setup.

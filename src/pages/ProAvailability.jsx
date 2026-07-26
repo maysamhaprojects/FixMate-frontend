@@ -7,6 +7,7 @@
  * לוגיקה    → hooks/useAvailability.js
  * עיצוב     → styles/availability.css
  */
+import AppChrome from "../components/AppChrome";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useAvailability } from "../hooks/useAvailability";
@@ -30,13 +31,7 @@ export default function ProAvailability() {
     <div className="av-page" dir={dir} style={{ opacity: mounted ? 1 : 0 }}>
 
       {/* Top nav */}
-      <nav className="av-nav">
-        <button className="av-back" onClick={() => navigate("/pro/dashboard")}>
-          <IconBack /> {isHe ? "לדשבורד" : "Dashboard"}
-        </button>
-        <h1 className="av-logo">Fix<b>Mate</b></h1>
-        <div className="av-nav-spacer" />
-      </nav>
+      <AppChrome />
 
       <div className="av-wrap">
         <div className="av-head">

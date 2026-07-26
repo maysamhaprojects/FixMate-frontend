@@ -6,6 +6,7 @@
  * לוגיקה → hooks/useClientProfile.js
  * עיצוב  → styles/clientProfile.css
  */
+import AppChrome from "../components/AppChrome";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/auth";
 import { useLang } from "../context/LanguageContext";
@@ -38,13 +39,7 @@ export default function ClientProfile() {
     <div className="cp-page" dir={dir}>
 
       {/* Top nav */}
-      <nav className="cp-nav">
-        <button className="cp-back" onClick={() => navigate("/client/dashboard")}>
-          <IconBack /> {isHe ? "לדשבורד" : "Dashboard"}
-        </button>
-        <h1 className="cp-logo">Fix<b>Mate</b></h1>
-        <div className="cp-nav-spacer" />
-      </nav>
+      <AppChrome />
 
       <div className="cp-wrap">
 

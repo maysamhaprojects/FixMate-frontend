@@ -138,3 +138,7 @@
   cursor: pointer; font-family: inherit;
   box-shadow: 0 6px 18px rgba(79,106,255,.3);
 }
+
+/* שורת כותרת מתחת ל-AppChrome */
+.mm-actionbar { max-width: 900px; margin: 0 auto; padding: 20px 24px 0; }
+.mm-actionbar .mm-nav-inner { display: flex; align-items: center; justify-content: space-between; gap: 12px; }

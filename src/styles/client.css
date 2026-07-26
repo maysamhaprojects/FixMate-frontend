@@ -710,3 +710,126 @@
 .cd-comp-response-title { font-size: 12px; font-weight: 700; color: #059669; margin-bottom: 3px; }
 .cd-comp-response-text { font-size: 13px; color: #166534; line-height: 1.5; }
 .cd-comp-date { font-size: 11px; color: #94A3B8; margin-top: 8px; }
+
+/* ══════════════════════════════════════════════════════════
+   HERO — קרוסלת קטגוריות מפוארת
+   ══════════════════════════════════════════════════════════ */
+.cd-hero {
+  position: relative;
+  border-radius: 28px;
+  overflow: hidden;
+  min-height: 340px;
+  margin-bottom: 28px;
+  box-shadow: 0 24px 60px -20px rgba(15, 23, 42, .45);
+  isolation: isolate;
+}
+
+/* שכבות התמונה — כל שקופית ממלאה את כל ה-hero */
+.cd-hero-slide {
+  position: absolute; inset: 0;
+  opacity: 0;
+  transform: scale(1.08);
+  transition: opacity 1.1s ease, transform 5s ease;
+  z-index: 1;
+}
+.cd-hero-slide--active {
+  opacity: 1;
+  transform: scale(1);          /* Ken Burns: zoom-out איטי בזמן שהשקופית פעילה */
+  z-index: 2;
+}
+.cd-hero-img {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+  mix-blend-mode: overlay;      /* התמונה מתמזגת עם הגרדיאנט הצבעוני → מראה יוקרתי אחיד */
+  opacity: .85;
+}
+
+/* שכבת כהות לקריאוּת הטקסט */
+.cd-hero-scrim {
+  position: absolute; inset: 0; z-index: 3;
+  background:
+    linear-gradient(0deg, rgba(10,15,30,.82) 0%, rgba(10,15,30,.35) 45%, rgba(10,15,30,.15) 100%),
+    radial-gradient(120% 120% at 80% 0%, rgba(255,255,255,.14), transparent 55%);
+}
+
+/* תוכן */
+.cd-hero-content {
+  position: relative; z-index: 4;
+  padding: 40px 44px;
+  max-width: 620px;
+  color: #FFF;
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  height: 100%;
+  justify-content: center;
+}
+.cd-hero-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 14px; border-radius: 50px;
+  background: rgba(255,255,255,.16);
+  border: 1px solid rgba(255,255,255,.28);
+  backdrop-filter: blur(10px);
+  font-size: 13px; font-weight: 700; letter-spacing: .3px;
+  animation: cdHeroBadge .5s ease;
+}
+.cd-hero-badge-icon { font-size: 15px; }
+@keyframes cdHeroBadge { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.cd-hero-title {
+  font-family: 'Outfit', 'Heebo', sans-serif;
+  font-size: clamp(26px, 3.4vw, 40px);
+  font-weight: 900; line-height: 1.12;
+  letter-spacing: -.5px;
+  text-shadow: 0 2px 20px rgba(0,0,0,.35);
+  margin: 0;
+}
+.cd-hero-sub {
+  font-size: clamp(14px, 1.4vw, 16px);
+  line-height: 1.6; color: rgba(255,255,255,.9);
+  max-width: 520px; margin: 0;
+  text-shadow: 0 1px 10px rgba(0,0,0,.3);
+}
+
+.cd-hero-actions { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.cd-hero-btn {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 13px 24px; border-radius: 14px;
+  font-family: 'Outfit', 'Heebo', sans-serif;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+  border: 1.5px solid transparent; transition: all .2s;
+}
+.cd-hero-btn svg { width: 18px; height: 18px; }
+.cd-hero-btn--primary {
+  background: #FFF; color: #1A2B4A;
+  box-shadow: 0 10px 30px -8px rgba(0,0,0,.5);
+}
+.cd-hero-btn--primary:hover { transform: translateY(-2px); box-shadow: 0 16px 38px -8px rgba(0,0,0,.55); }
+.cd-hero-btn--ghost {
+  background: rgba(255,255,255,.12);
+  border-color: rgba(255,255,255,.4);
+  color: #FFF; backdrop-filter: blur(8px);
+}
+.cd-hero-btn--ghost:hover { background: rgba(255,255,255,.22); transform: translateY(-2px); }
+
+/* נקודות ניווט */
+.cd-hero-dots {
+  position: absolute; z-index: 5;
+  bottom: 20px; inset-inline-end: 28px;
+  display: flex; gap: 8px;
+}
+.cd-hero-dot {
+  width: 9px; height: 9px; border-radius: 50%;
+  border: none; cursor: pointer; padding: 0;
+  background: rgba(255,255,255,.4);
+  transition: all .3s;
+}
+.cd-hero-dot--active { background: #FFF; width: 26px; border-radius: 5px; }
+
+/* מובייל */
+@media (max-width: 640px) {
+  .cd-hero { min-height: 300px; border-radius: 22px; }
+  .cd-hero-content { padding: 26px 22px; gap: 12px; }
+  .cd-hero-actions { width: 100%; }
+  .cd-hero-btn { flex: 1; justify-content: center; padding: 12px 16px; }
+  .cd-hero-dots { bottom: 14px; inset-inline-end: 18px; }
+}

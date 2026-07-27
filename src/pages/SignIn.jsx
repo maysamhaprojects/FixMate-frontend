@@ -232,7 +232,7 @@ export default function SignIn() {
             {errors.password && <p className="auth-field-error">{errors.password}</p>}
           </div>
 
-          {/* Remember me + Forgot */}
+          {/* Remember me */}
           <div className="auth-options-row">
             <label className="auth-checkbox-label" onClick={function() {
               var next = !rememberMe;
@@ -255,9 +255,6 @@ export default function SignIn() {
               </div>
               {isHe ? "זכור אותי" : "Remember me"}
             </label>
-            <button type="button" className="auth-forgot-link" onClick={function() { navigate("/forgot-password"); }}>
-              {isHe ? "שכחת סיסמה?" : "Forgot password?"}
-            </button>
           </div>
 
           {/* Submit */}

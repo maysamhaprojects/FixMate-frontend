@@ -6,8 +6,10 @@
  * ============================================================
  */
 
-// כתובת הבקאנד — מקום אחד יחיד לשנות אם השרת עובר
-export const API_BASE = "http://localhost:8080";
+// כתובת הבקאנד — מקום אחד יחיד לשנות אם השרת עובר.
+// בפיתוח: ברירת מחדל http://localhost:8080.
+// ב-Docker/ענן: מגדירים VITE_API_BASE (למשל "" כדי לפנות דרך אותו origin).
+export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
 
 /**
  * עוטף את fetch:

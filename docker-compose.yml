@@ -1,0 +1,54 @@
+# ============================================================
+#  FixMate — full stack with Docker Compose
+#  Runs MySQL + backend + frontend together.
+#
+#  Requires both repositories cloned side by side:
+#    <parent>/FixMate-backend
+#    <parent>/FixMate-frontend   <-- run "docker compose up" from here
+#
+#  Then open http://localhost:3000
+# ============================================================
+
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: fixmate_root_pw
+      MYSQL_DATABASE: fixmate_db
+    ports:
+      - "3307:3306"          # host 3307 avoids clashing with a local MySQL on 3306
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pfixmate_root_pw"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: ../FixMate-backend
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: fixmate_db
+      DB_USERNAME: root
+      DB_PASSWORD: fixmate_root_pw
+      JWT_SECRET: docker-dev-jwt-secret-change-me-at-least-32-chars
+      # Optional: set OPENAI_API_KEY in your shell to enable the AI feature
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MAIL_ENABLED: "false"
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"          # optional: direct access to the API
+
+  frontend:
+    build: .
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"            # open http://localhost:3000
+
+volumes:
+  db_data:

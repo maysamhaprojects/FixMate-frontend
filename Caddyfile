@@ -1,0 +1,5 @@
+# FixMate — Caddy reverse proxy with automatic HTTPS (Let's Encrypt).
+# DOMAIN is provided via the environment (see .env / docker-compose.aws.yml).
+{$DOMAIN} {
+	reverse_proxy frontend:80
+}

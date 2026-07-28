@@ -1,0 +1,68 @@
+# ============================================================
+#  FixMate — full stack with automatic HTTPS (for a cloud server).
+#  Same as docker-compose.yml, but a Caddy reverse proxy terminates
+#  HTTPS (Let's Encrypt) in front of the frontend.
+#
+#  Requires a domain pointing to this server. Provide it via a .env file:
+#      echo "DOMAIN=your-name.duckdns.org" > .env
+#  Open ports 80 and 443 in the server firewall, then:
+#      sudo docker compose -f docker-compose.aws.yml up -d --build
+#  Open:  https://your-name.duckdns.org
+# ============================================================
+
+services:
+  db:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: fixmate_root_pw
+      MYSQL_DATABASE: fixmate_db
+    volumes:
+      - db_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-uroot", "-pfixmate_root_pw"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+
+  backend:
+    build: ../FixMate-backend
+    environment:
+      DB_HOST: db
+      DB_PORT: "3306"
+      DB_NAME: fixmate_db
+      DB_USERNAME: root
+      DB_PASSWORD: fixmate_root_pw
+      JWT_SECRET: docker-dev-jwt-secret-change-me-at-least-32-chars
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      MAIL_ENABLED: "false"
+      LOG_DIR: /app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./backend-logs:/app/logs
+
+  frontend:
+    build: .
+    depends_on:
+      - backend
+    # no host port — Caddy is the public entry point
+
+  caddy:
+    image: caddy:2-alpine
+    depends_on:
+      - frontend
+    environment:
+      DOMAIN: ${DOMAIN}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  db_data:
+  caddy_data:
+  caddy_config:

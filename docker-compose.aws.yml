@@ -36,6 +36,8 @@ services:
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MAIL_ENABLED: "false"
       LOG_DIR: /app/logs
+      # allow the browser on the site's own domain (set via .env DOMAIN)
+      APP_CORS_ALLOWED_ORIGINS: "https://${DOMAIN},http://${DOMAIN}"
     depends_on:
       db:
         condition: service_healthy

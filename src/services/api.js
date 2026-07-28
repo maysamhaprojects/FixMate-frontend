@@ -7,9 +7,12 @@
  */
 
 // כתובת הבקאנד — מקום אחד יחיד לשנות אם השרת עובר.
-// בפיתוח: ברירת מחדל http://localhost:8080.
-// ב-Docker/ענן: מגדירים VITE_API_BASE (למשל "" כדי לפנות דרך אותו origin).
-export const API_BASE = import.meta.env.VITE_API_BASE ?? "http://localhost:8080";
+// - בפיתוח (vite dev): http://localhost:8080.
+// - בבנייה לייצור (Docker/ענן): כתובת ריקה => פנייה יחסית "/api/..." דרך אותו
+//   origin (nginx מעביר לבקאנד). כך אין תלות במשתנה סביבה שאולי לא נקלט בבנייה.
+// אפשר עדיין לעקוף הכל עם VITE_API_BASE אם צריך.
+export const API_BASE =
+  import.meta.env.VITE_API_BASE ?? (import.meta.env.PROD ? "" : "http://localhost:8080");
 
 /**
  * עוטף את fetch:

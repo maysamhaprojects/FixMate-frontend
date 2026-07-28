@@ -37,9 +37,12 @@ services:
       # Optional: set OPENAI_API_KEY in your shell to enable the AI feature
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
       MAIL_ENABLED: "false"
+      LOG_DIR: /app/logs
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ./backend-logs:/app/logs   # system logs are saved here on the host
     ports:
       - "8080:8080"          # optional: direct access to the API
 

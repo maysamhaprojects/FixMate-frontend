@@ -28,3 +28,6 @@ dist-ssr
 
 # Runtime logs written by the backend container (Docker bind mount)
 backend-logs/
+
+# Environment file with server secrets (DOMAIN, OPENAI_API_KEY, MAIL_*) — never commit
+.env

@@ -34,7 +34,14 @@ services:
       DB_PASSWORD: fixmate_root_pw
       JWT_SECRET: docker-dev-jwt-secret-change-me-at-least-32-chars
       OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      MAIL_ENABLED: "false"
+      # Email notifications (Gmail SMTP). Set these in the server .env to enable:
+      #   MAIL_ENABLED=true, MAIL_USERNAME=<gmail>, MAIL_PASSWORD=<Gmail App Password>
+      MAIL_ENABLED: "${MAIL_ENABLED:-false}"
+      MAIL_HOST: "${MAIL_HOST:-smtp.gmail.com}"
+      MAIL_PORT: "${MAIL_PORT:-587}"
+      MAIL_USERNAME: "${MAIL_USERNAME:-}"
+      MAIL_PASSWORD: "${MAIL_PASSWORD:-}"
+      MAIL_FROM: "${MAIL_FROM:-fixmate.noreply@gmail.com}"
       LOG_DIR: /app/logs
       # allow the browser on the site's own domain (set via .env DOMAIN)
       APP_CORS_ALLOWED_ORIGINS: "https://${DOMAIN},http://${DOMAIN}"

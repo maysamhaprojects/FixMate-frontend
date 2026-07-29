@@ -194,7 +194,10 @@ export function useClientData({ t, lang, isHe }) {
           setEditOrder(null);
           showToast(isHe ? "ההזמנה עודכנה בהצלחה" : "Order updated successfully", "success");
         } else {
-          r.text().then((msg) => showToast((isHe ? "עדכון נכשל: " : "Update failed: ") + (msg || ("קוד " + r.status)), "error"));
+          // השרת מחזיר JSON עם שדה error (למשל "בעל המקצוע לא עובד במועד שבחרת")
+          r.json()
+            .then((data) => showToast(data.error || (isHe ? "העדכון נכשל" : "Update failed"), "error"))
+            .catch(() => showToast((isHe ? "העדכון נכשל (קוד " : "Update failed (code ") + r.status + ")", "error"));
         }
       })
       .catch((e) => showToast((isHe ? "שגיאת רשת: " : "Network error: ") + e.message, "error"))

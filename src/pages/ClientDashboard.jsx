@@ -62,7 +62,7 @@ export default function ClientDashboard() {
     showAllOrders, setShowAllOrders,
     showAllComplaints, setShowAllComplaints,
     STATUS_MAP,
-    editOrder, setEditOrder, openEdit, saveEdit, editSaving,
+    editOrder, setEditOrder, openEdit, saveEdit, editSaving, editProHours,
     editDate, setEditDate, editTime, setEditTime,
     editAddr, setEditAddr, editDesc, setEditDesc,
     trackOrder, setTrackOrder, getProgressSteps,
@@ -335,6 +335,7 @@ export default function ClientDashboard() {
       <EditOrderModal order={editOrder} onClose={() => setEditOrder(null)}
         date={editDate} setDate={setEditDate} time={editTime} setTime={setEditTime}
         addr={editAddr} setAddr={setEditAddr} desc={editDesc} setDesc={setEditDesc}
+        proHours={editProHours}
         saving={editSaving} onSave={saveEdit} t={t} dir={dir} isHe={isHe} />
 
       <TrackModal order={trackOrder} onClose={() => setTrackOrder(null)}

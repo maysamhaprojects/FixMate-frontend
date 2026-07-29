@@ -13,6 +13,43 @@ import { getMyBookings, updateBooking, cancelBooking } from "../services/booking
 import { getRatedBookings } from "../services/rating";
 import { createComplaint, getMyComplaints } from "../services/complaint";
 import { CANCEL_FEE, GRACE_MINUTES } from "../data/clientConstants";
+import { apiFetch } from "../services/api";
+
+/* שמות ימי השבוע (בסדר שבועי) — לסיכום שעות העבודה של בעל המקצוע */
+const DAY_ORDER = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
+const DAY_HE = { SUNDAY: "ראשון", MONDAY: "שני", TUESDAY: "שלישי", WEDNESDAY: "רביעי", THURSDAY: "חמישי", FRIDAY: "שישי", SATURDAY: "שבת" };
+const DAY_EN = { SUNDAY: "Sun", MONDAY: "Mon", TUESDAY: "Tue", WEDNESDAY: "Wed", THURSDAY: "Thu", FRIDAY: "Fri", SATURDAY: "Sat" };
+
+/* מכווץ ימים רצופים לטווח: [ראשון..חמישי] → "ראשון–חמישי" */
+function collapseDays(days, names) {
+  const idxs = [...new Set(days.map((d) => DAY_ORDER.indexOf(d)))].filter((i) => i >= 0).sort((a, b) => a - b);
+  if (!idxs.length) return "";
+  const runs = [];
+  let start = idxs[0], prev = idxs[0];
+  for (let i = 1; i < idxs.length; i++) {
+    if (idxs[i] === prev + 1) prev = idxs[i];
+    else { runs.push([start, prev]); start = idxs[i]; prev = idxs[i]; }
+  }
+  runs.push([start, prev]);
+  return runs
+    .map(([a, b]) => (a === b ? names[DAY_ORDER[a]] : names[DAY_ORDER[a]] + "–" + names[DAY_ORDER[b]]))
+    .join(", ");
+}
+
+/* הופך רשימת זמינות לטקסט קריא: "ראשון–חמישי 08:00–18:00" */
+function summarizeHours(slots, isHe) {
+  const names = isHe ? DAY_HE : DAY_EN;
+  const valid = (slots || []).filter((s) => s.available && s.startTime && s.endTime);
+  if (!valid.length) return null;
+  const groups = {};
+  for (const s of valid) {
+    const range = s.startTime.slice(0, 5) + "–" + s.endTime.slice(0, 5);
+    (groups[range] = groups[range] || []).push(s.dayOfWeek);
+  }
+  return Object.entries(groups)
+    .map(([range, days]) => collapseDays(days, names) + " " + range)
+    .join(" · ");
+}
 
 export function useClientData({ t, lang, isHe }) {
   const [mounted, setMounted] = useState(false);
@@ -38,6 +75,7 @@ export function useClientData({ t, lang, isHe }) {
   const [editAddr, setEditAddr] = useState("");
   const [editDesc, setEditDesc] = useState("");
   const [editSaving, setEditSaving] = useState(false);
+  const [editProHours, setEditProHours] = useState(null);  // שעות העבודה של בעל המקצוע, להצגה בטופס
 
   /* תלונה */
   const [showComplaint, setShowComplaint] = useState(false);
@@ -81,6 +119,7 @@ export function useClientData({ t, lang, isHe }) {
           return {
             id: "ORD-" + b.id,
             bookingId: b.id,
+            proId: (b.pro && b.pro.id) || null,
             createdAt: b.createdAt || null,
             proName,
             proRole: b.serviceType || "",
@@ -174,6 +213,15 @@ export function useClientData({ t, lang, isHe }) {
     setEditTime(order.time);
     setEditAddr(order.address || "");
     setEditDesc(order.description);
+
+    // שולפים את שעות העבודה של בעל המקצוע כדי להציג ללקוח מה זמין
+    setEditProHours(null);
+    if (order.proId) {
+      apiFetch("/api/pros/" + order.proId + "/availability")
+        .then((r) => (r.ok ? r.json() : null))
+        .then((slots) => setEditProHours(summarizeHours(slots, isHe)))
+        .catch(() => setEditProHours(null));
+    }
   };
 
   const saveEdit = () => {
@@ -293,7 +341,7 @@ export function useClientData({ t, lang, isHe }) {
     STATUS_MAP,
 
     /* עריכה */
-    editOrder, setEditOrder, openEdit, saveEdit, editSaving,
+    editOrder, setEditOrder, openEdit, saveEdit, editSaving, editProHours,
     editDate, setEditDate, editTime, setEditTime,
     editAddr, setEditAddr, editDesc, setEditDesc,
 

@@ -1,5 +1,5 @@
 /* FixMate — מודל עריכת הזמנה (לקוח) */
-export default function EditOrderModal({ order, onClose, date, setDate, time, setTime, addr, setAddr, desc, setDesc, saving, onSave, t, dir, isHe }) {
+export default function EditOrderModal({ order, onClose, date, setDate, time, setTime, addr, setAddr, desc, setDesc, proHours, saving, onSave, t, dir, isHe }) {
   if (!order) return null;
   return (
     <div className="cd-modal-overlay" onClick={onClose}>
@@ -12,7 +12,15 @@ export default function EditOrderModal({ order, onClose, date, setDate, time, se
           <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_order_id")}</label><p className="cd-modal-value">{order.id}</p></div>
           <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_professional")}</label><p className="cd-modal-value">{order.proName} — {order.proRole}</p></div>
           <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_date")}</label><input type="date" className="cd-modal-input" value={date} onChange={(e) => setDate(e.target.value)} /></div>
-          <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_time")}</label><input type="time" className="cd-modal-input" value={time} onChange={(e) => setTime(e.target.value)} /></div>
+          <div className="cd-modal-field">
+            <label className="cd-modal-label">{t("cd_time")}</label>
+            <input type="time" className="cd-modal-input" value={time} onChange={(e) => setTime(e.target.value)} />
+            {proHours && (
+              <p className="cd-modal-hint">
+                🕐 {isHe ? "שעות פעילות של בעל המקצוע: " : "Professional's working hours: "}<strong>{proHours}</strong>
+              </p>
+            )}
+          </div>
           <div className="cd-modal-field"><label className="cd-modal-label">{isHe ? "כתובת" : "Address"}</label><input type="text" className="cd-modal-input" value={addr} onChange={(e) => setAddr(e.target.value)} placeholder={isHe ? "רחוב, עיר" : "Street, city"} /></div>
           <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_description")}</label><textarea className="cd-modal-textarea" value={desc} onChange={(e) => setDesc(e.target.value)} rows={3} /></div>
         </div>

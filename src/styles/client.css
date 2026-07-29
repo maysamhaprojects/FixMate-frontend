@@ -548,6 +548,14 @@
 }
 .cd-modal-value { font-size: 15px; color: #1A2B4A; font-weight: 500; }
 
+/* רמז שעות פעילות של בעל המקצוע — מתחת לשדה השעה */
+.cd-modal-hint {
+  margin: 8px 0 0; padding: 8px 12px; border-radius: 9px;
+  font-size: 12.5px; color: #1E40AF; line-height: 1.5;
+  background: #EFF4FF; border: 1px solid #DBE6FF;
+}
+.cd-modal-hint strong { font-weight: 700; }
+
 .cd-modal-input {
   width: 100%; padding: 10px 14px; border-radius: 10px;
   border: 1px solid #E8ECF4; font-size: 14px;

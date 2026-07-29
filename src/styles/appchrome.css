@@ -72,7 +72,10 @@ body.has-chrome.sb-hidden .av-page, body.has-chrome.sb-hidden .mo-page {
   transition: transform .3s cubic-bezier(.4,0,.2,1);
 }
 [dir="rtl"] .ac-side { transform: translateX(100%); }
-.ac-side--open { transform: translateX(0); }
+/* חשוב: כלל הפתיחה חייב אותה עדיפות (specificity) כמו כלל ה-RTL,
+   אחרת ב-RTL ה-Sidebar נשאר מחוץ למסך גם כשהוא "פתוח". */
+.ac-side--open,
+[dir="rtl"] .ac-side--open { transform: translateX(0); }
 
 /* רקע תמונות — ממלא את כל ה-Sidebar */
 .ac-bg { position: absolute; inset: 0; z-index: 0; }

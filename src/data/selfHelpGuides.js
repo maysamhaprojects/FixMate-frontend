@@ -179,17 +179,7 @@ export const GUIDES_HE = [
   },
 ];
 
-/* תמונות כותרת (אמיתיות) + תקצירים לכל נושא */
-export const COVER = {
-  boiler:     { img: "https://loremflickr.com/460/280/water,heater" },
-  ac:         { img: "https://loremflickr.com/460/280/air,conditioner" },
-  electrical: { img: "https://loremflickr.com/460/280/electrician,wiring" },
-  plumbing:   { img: "https://loremflickr.com/460/280/plumber,pipe" },
-  lock:       { img: "https://loremflickr.com/460/280/door,lock" },
-  paint:      { img: "https://loremflickr.com/460/280/wall,paint" },
-  carpentry:  { img: "https://loremflickr.com/460/280/furniture,wood" },
-  washer:     { img: "https://loremflickr.com/460/280/washing,machine" },
-};
+/* תקצירים לכל נושא (מוצגים בגוף הכרטיס) */
 export const EXCERPT = {
   he: {
     boiler: "אין מים חמים בבית? לפני שמזמינים בעל מקצוע — כמה בדיקות פשוטות שאפשר לעשות לבד ולחסוך כסף.",

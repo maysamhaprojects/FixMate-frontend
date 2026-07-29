@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { IconBack } from "../components/GuideIcons";
 import StepGuide from "../components/StepGuide";
-import { GUIDES_EN, GUIDES_HE, COVER, EXCERPT } from "../data/selfHelpGuides";
+import { GUIDES_EN, GUIDES_HE, EXCERPT } from "../data/selfHelpGuides";
 import "../styles/mindMap.css";
 
 /*
@@ -75,15 +75,9 @@ export default function MindMap() {
           <div className="mm-grid">
             {GUIDES.map((g) => (
               <div key={g.id} className="helpCard" onClick={() => setSelectedId(g.id)}>
-                {/* תמונת כותרת (עם fallback לגרדיאנט+אייקון אם התמונה לא נטענת) */}
+                {/* כותרת הכרטיס — גרדיאנט צבעוני + אימוג'י גדול (עיצוב אחיד, ללא תלות בתמונה חיצונית) */}
                 <div className="mm-cover" style={{ background: `linear-gradient(135deg,${g.color},${g.color}bb)` }}>
                   <span className="mm-cover-icon">{g.icon}</span>
-                  <img
-                    src={COVER[g.id] && COVER[g.id].img}
-                    alt={g.title}
-                    loading="lazy"
-                    onError={(e) => { e.currentTarget.style.display = "none"; }}
-                  />
                 </div>
                 {/* גוף הכרטיס */}
                 <div className="mm-card-body">

@@ -11,7 +11,7 @@ export default function EditOrderModal({ order, onClose, date, setDate, time, se
         <div className="cd-modal-body">
           <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_order_id")}</label><p className="cd-modal-value">{order.id}</p></div>
           <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_professional")}</label><p className="cd-modal-value">{order.proName} — {order.proRole}</p></div>
-          <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_date")}</label><input type="date" className="cd-modal-input" value={date} onChange={(e) => setDate(e.target.value)} /></div>
+          <div className="cd-modal-field"><label className="cd-modal-label">{t("cd_date")}</label><input type="date" className="cd-modal-input" min={new Date().toISOString().slice(0, 10)} value={date} onChange={(e) => setDate(e.target.value)} /></div>
           <div className="cd-modal-field">
             <label className="cd-modal-label">{t("cd_time")}</label>
             <input type="time" className="cd-modal-input" value={time} onChange={(e) => setTime(e.target.value)} />

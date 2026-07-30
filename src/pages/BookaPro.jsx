@@ -45,6 +45,16 @@ export default function BookaPro() {
 
   const BackIcon = isRTL ? IconForward : IconBack;
 
+  /* כשהתאריך הנבחר הוא היום — לא מציגים שעות שכבר עברו (מונע בחירת מועד בעבר). */
+  const nowD = new Date();
+  const localToday = `${nowD.getFullYear()}-${String(nowD.getMonth() + 1).padStart(2, "0")}-${String(nowD.getDate()).padStart(2, "0")}`;
+  const nowHM = `${String(nowD.getHours()).padStart(2, "0")}:${String(nowD.getMinutes()).padStart(2, "0")}`;
+  const slotOk = (v) => date !== localToday || v > nowHM;
+  const morningSlots   = TIME_OPTIONS.filter(ti => parseInt(ti.value) < 12 && slotOk(ti.value));
+  const afternoonSlots = TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 12 && parseInt(ti.value) < 16 && slotOk(ti.value));
+  const eveningSlots   = TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 16 && slotOk(ti.value));
+  const noSlotsToday   = morningSlots.length + afternoonSlots.length + eveningSlots.length === 0;
+
   /* מחלקת שדה — נצבע בכחול כשיש ערך */
   const fldCls = (filled, extra = "") => "bp-fld" + (filled ? " bp-fld--filled" : "") + (extra ? " " + extra : "");
 
@@ -184,16 +194,24 @@ export default function BookaPro() {
                       <span className="bp-label-ico bp-label-ico--purple"><IconClockLg /></span>{t("bp_time")}
                     </label>
                     <select className={fldCls(!!time, "bp-select")} value={time} onChange={e => setTime(e.target.value)}>
-                      <option value="" disabled>{t("bp_select_time")}</option>
-                      <optgroup label={t("bp_morning")}>
-                        {TIME_OPTIONS.filter(ti => parseInt(ti.value) < 12).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
-                      </optgroup>
-                      <optgroup label={t("bp_afternoon")}>
-                        {TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 12 && parseInt(ti.value) < 16).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
-                      </optgroup>
-                      <optgroup label={t("bp_evening")}>
-                        {TIME_OPTIONS.filter(ti => parseInt(ti.value) >= 16).map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
-                      </optgroup>
+                      <option value="" disabled>
+                        {noSlotsToday ? (isHe ? "אין שעות פנויות היום — בחרו תאריך אחר" : "No times left today — pick another date") : t("bp_select_time")}
+                      </option>
+                      {morningSlots.length > 0 && (
+                        <optgroup label={t("bp_morning")}>
+                          {morningSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                        </optgroup>
+                      )}
+                      {afternoonSlots.length > 0 && (
+                        <optgroup label={t("bp_afternoon")}>
+                          {afternoonSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                        </optgroup>
+                      )}
+                      {eveningSlots.length > 0 && (
+                        <optgroup label={t("bp_evening")}>
+                          {eveningSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                        </optgroup>
+                      )}
                     </select>
                   </div>
                 </div>

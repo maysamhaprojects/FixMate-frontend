@@ -15,15 +15,6 @@ export default function ComplaintModal({ open, onClose, subject, setSubject, des
               placeholder={isHe ? "לדוגמה: בעל המקצוע לא הגיע" : "e.g. The professional didn't show up"} />
           </div>
           <div className="cd-modal-field">
-            <label className="cd-modal-label">{isHe ? "הזמנה קשורה (אופציונלי)" : "Related order (optional)"}</label>
-            <select className="cd-modal-input" value={orderId} onChange={(e) => setOrderId(e.target.value)}>
-              <option value="">{isHe ? "— ללא —" : "— None —"}</option>
-              {orders.filter(o => o.bookingId).map(o => (
-                <option key={o.bookingId} value={o.bookingId}>{o.id} · {o.proName} ({o.proRole})</option>
-              ))}
-            </select>
-          </div>
-          <div className="cd-modal-field">
             <label className="cd-modal-label">{isHe ? "פירוט התלונה" : "Description"}</label>
             <textarea className="cd-modal-textarea" value={desc} onChange={(e) => setDesc(e.target.value)} rows={4}
               placeholder={isHe ? "תארי מה קרה..." : "Describe what happened..."} />

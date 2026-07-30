@@ -51,6 +51,9 @@ export default function BookaPro() {
   const nowHM = `${String(nowD.getHours()).padStart(2, "0")}:${String(nowD.getMinutes()).padStart(2, "0")}`;
   const slotOk = (v) => date !== localToday || v > nowHM;
   const availableSlots = TIME_OPTIONS.filter(ti => slotOk(ti.value));
+  const morningSlots   = availableSlots.filter(ti => parseInt(ti.value) < 12);
+  const afternoonSlots = availableSlots.filter(ti => parseInt(ti.value) >= 12 && parseInt(ti.value) < 17);
+  const eveningSlots   = availableSlots.filter(ti => parseInt(ti.value) >= 17);
   const noSlotsToday   = availableSlots.length === 0;
 
   /* מחלקת שדה — נצבע בכחול כשיש ערך */
@@ -195,7 +198,21 @@ export default function BookaPro() {
                       <option value="" disabled>
                         {noSlotsToday ? (isHe ? "אין שעות פנויות היום — בחרו תאריך אחר" : "No times left today — pick another date") : t("bp_select_time")}
                       </option>
-                      {availableSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                      {morningSlots.length > 0 && (
+                        <optgroup label={t("bp_morning")}>
+                          {morningSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                        </optgroup>
+                      )}
+                      {afternoonSlots.length > 0 && (
+                        <optgroup label={t("bp_afternoon")}>
+                          {afternoonSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                        </optgroup>
+                      )}
+                      {eveningSlots.length > 0 && (
+                        <optgroup label={t("bp_evening")}>
+                          {eveningSlots.map(ti => <option key={ti.value} value={ti.value}>{ti.label}</option>)}
+                        </optgroup>
+                      )}
                     </select>
                   </div>
                 </div>

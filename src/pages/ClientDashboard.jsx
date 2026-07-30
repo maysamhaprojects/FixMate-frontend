@@ -13,6 +13,7 @@ import { useClientData } from "../hooks/useClientData";
 import { PREVIEW_COUNT, NOTIF_ICONS } from "../data/clientConstants";
 import { IconCamera, IconSearch, IconMindMap, IconUser, IconLogout, IconStar, IconClock, IconPhone, IconArrowRight, IconWrench, IconBell, IconSettings, IconEdit, IconHistory, IconHeart } from "../components/Icons";
 import EditOrderModal from "../components/client/EditOrderModal";
+import MonthlyOrdersChart from "../components/MonthlyOrdersChart";
 import TrackModal from "../components/client/TrackModal";
 import CancelOrderModal from "../components/client/CancelOrderModal";
 import ComplaintModal from "../components/client/ComplaintModal";
@@ -180,6 +181,16 @@ export default function ClientDashboard() {
         </section>
 
         {/* ═══ ACTION CARDS ═══ */}
+        {/* ═══ הזמנות לפי חודש ═══ */}
+        <section style={{ margin: "0 0 24px" }}>
+          <div className="stat-card" style={{ padding: 18 }}>
+            <h3 style={{ fontSize: 16, fontWeight: 800, color: "#1A2B4A", margin: "0 0 12px", textAlign: isHe ? "right" : "left" }}>
+              {isHe ? "ההזמנות שלי לפי חודש" : "My orders per month"}
+            </h3>
+            <MonthlyOrdersChart orders={orders} dateField="date" isHe={isHe} />
+          </div>
+        </section>
+
         <section className="cd-actions">
           <div className="cd-action-card cd-action-card--snap" onClick={() => navigate("/client/snap")}>
             <div className="cd-action-icon-wrap cd-action-icon--orange"><IconCamera /></div>

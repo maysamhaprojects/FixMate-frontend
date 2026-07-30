@@ -26,6 +26,7 @@ import { useProOrders } from "../hooks/useProOrders";
 import { STATUS_STYLE, getActions, MODAL_CFG, FILTERS } from "../data/orderConstants";
 import { IconWrench } from "../components/ProIcons";
 import { IconBack, IconSearch, IconCal, IconPin, IconPhone } from "../components/OrderIcons";
+import MonthlyOrdersChart from "../components/MonthlyOrdersChart";
 import "../styles/manageOrders.css";
 
 export default function ManageOrders() {
@@ -38,6 +39,7 @@ export default function ManageOrders() {
   /* כל הלוגיקה מגיעה מ-hooks/useProOrders.js */
   const {
     mounted,
+    orders,
     filtered, count,
     activeFilter, setActiveFilter,
     search, setSearch,
@@ -99,6 +101,14 @@ export default function ManageOrders() {
               </button>
             );
           })}
+        </div>
+
+        {/* ── הזמנות לפי חודש ── */}
+        <div style={{ background: "#fff", border: "1px solid #EEF1F6", borderRadius: 16, padding: 18, margin: "0 0 22px", boxShadow: "0 6px 20px -14px rgba(16,24,40,.2)" }}>
+          <h3 style={{ fontSize: 16, fontWeight: 800, color: "#1A2B4A", margin: "0 0 12px", textAlign: isHe ? "right" : "left" }}>
+            {isHe ? "ההזמנות שלי לפי חודש" : "My orders per month"}
+          </h3>
+          <MonthlyOrdersChart orders={orders} dateField="date" isHe={isHe} />
         </div>
 
         {/* ── Grid כרטיסים ── */}

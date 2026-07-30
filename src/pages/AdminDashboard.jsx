@@ -21,7 +21,6 @@ import { getLang, getDir } from "../context/LanguageContext";
 import { useAdminData } from "../hooks/useAdminData";
 import { IcoGrid, IcoUsers, IcoShield, IcoAlert, IcoClip, IcoDollar, IcoCheck, IcoX, IcoEye, IcoBan, IcoSearch, IcoLogout, IcoWrench, IcoChevR, IcoBack, IcoStar, IcoStarNav, IcoMail, IcoPhone, IcoRefresh } from "../components/AdminIcons";
 import AdminModals from "../components/admin/AdminModals";
-import MonthlyOrdersChart from "../components/MonthlyOrdersChart";
 import { ORDER_STATUS, COMP_PRI } from "../data/adminConstants";
 import "../styles/admin.css";
 
@@ -177,14 +176,6 @@ export default function AdminDashboard() {
                   <p className="admin-kpi-sub">{c.sub}</p>
                 </div>
               ))}
-            </div>
-
-            {/* Orders per month */}
-            <div className="admin-panel" style={{ marginBottom: 18 }}>
-              <div className="admin-panel-head">
-                <h3 className="admin-panel-title">{L("Orders per month", "הזמנות לפי חודש")}</h3>
-              </div>
-              <MonthlyOrdersChart orders={orders} dateField="date" isHe={isHe} />
             </div>
 
             {/* Two columns */}

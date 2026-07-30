@@ -13,7 +13,6 @@ import { useClientData } from "../hooks/useClientData";
 import { PREVIEW_COUNT, NOTIF_ICONS } from "../data/clientConstants";
 import { IconCamera, IconSearch, IconMindMap, IconUser, IconLogout, IconStar, IconClock, IconPhone, IconArrowRight, IconWrench, IconBell, IconSettings, IconEdit, IconHistory, IconHeart } from "../components/Icons";
 import EditOrderModal from "../components/client/EditOrderModal";
-import MonthlyOrdersChart from "../components/MonthlyOrdersChart";
 import TrackModal from "../components/client/TrackModal";
 import CancelOrderModal from "../components/client/CancelOrderModal";
 import ComplaintModal from "../components/client/ComplaintModal";
@@ -45,6 +44,7 @@ export default function ClientDashboard() {
 
   /* ── קרוסלת ה-Hero: מחליפה שקופית כל 4 שניות ── */
   const [heroIdx, setHeroIdx] = useState(0);
+  const [orderMonth, setOrderMonth] = useState("");   // בורר חודש: "" = הזמנות פעילות
   useEffect(() => {
     const id = setInterval(() => setHeroIdx((i) => (i + 1) % HERO_SLIDES.length), 4000);
     return () => clearInterval(id);
@@ -73,6 +73,16 @@ export default function ClientDashboard() {
     compSubject, setCompSubject, compDesc, setCompDesc, compOrderId, setCompOrderId,
     toast,
   } = useClientData({ t, lang, isHe });
+
+  /* בורר חודש: אם נבחר חודש — מציגים את כל ההזמנות מאותו חודש; אחרת ההזמנות הפעילות. */
+  const MON = isHe
+    ? ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthOptions = [...new Set(orders.map((o) => (o.date || "").slice(0, 7)).filter(Boolean))].sort().reverse();
+  const monthLabel = (key) => { const [y, m] = key.split("-"); return `${MON[parseInt(m, 10) - 1]} ${y}`; };
+  const displayedOrders = orderMonth
+    ? orders.filter((o) => (o.date || "").slice(0, 7) === orderMonth)
+    : activeOrders;
 
   return (
     <div className={`cd-page ${mounted ? "cd-page--vis" : ""}`} style={{ direction: dir }}>
@@ -181,16 +191,6 @@ export default function ClientDashboard() {
         </section>
 
         {/* ═══ ACTION CARDS ═══ */}
-        {/* ═══ הזמנות לפי חודש ═══ */}
-        <section style={{ margin: "0 0 24px" }}>
-          <div className="stat-card" style={{ padding: 18 }}>
-            <h3 style={{ fontSize: 16, fontWeight: 800, color: "#1A2B4A", margin: "0 0 12px", textAlign: isHe ? "right" : "left" }}>
-              {isHe ? "ההזמנות שלי לפי חודש" : "My orders per month"}
-            </h3>
-            <MonthlyOrdersChart orders={orders} dateField="date" isHe={isHe} />
-          </div>
-        </section>
-
         <section className="cd-actions">
           <div className="cd-action-card cd-action-card--snap" onClick={() => navigate("/client/snap")}>
             <div className="cd-action-icon-wrap cd-action-icon--orange"><IconCamera /></div>
@@ -223,14 +223,21 @@ export default function ClientDashboard() {
         {/* ═══ ORDERS ═══ */}
         <section className="cd-orders-section">
           <div className="cd-orders-header">
-            <h2 className="cd-orders-title">{t("cd_active_orders")} <span className="cd-orders-count">{activeOrders.length}</span></h2>
+            <h2 className="cd-orders-title">{orderMonth ? monthLabel(orderMonth) : t("cd_active_orders")} <span className="cd-orders-count">{displayedOrders.length}</span></h2>
+            {monthOptions.length > 0 && (
+              <select value={orderMonth} onChange={(e) => setOrderMonth(e.target.value)}
+                style={{ padding: "6px 12px", borderRadius: 10, border: "1.5px solid #E8ECF4", fontSize: 13, fontWeight: 600, color: "#334155", background: "#F9FAFB", cursor: "pointer", fontFamily: "inherit" }}>
+                <option value="">{isHe ? "הזמנות פעילות" : "Active orders"}</option>
+                {monthOptions.map((k) => <option key={k} value={k}>{monthLabel(k)}</option>)}
+              </select>
+            )}
           </div>
 
-          {activeOrders.length === 0 ? (
-            <div className="cd-orders-empty"><p>{t("cd_no_orders")}</p><p>{t("cd_book_to_start")}</p></div>
+          {displayedOrders.length === 0 ? (
+            <div className="cd-orders-empty"><p>{orderMonth ? (isHe ? "אין הזמנות בחודש זה" : "No orders this month") : t("cd_no_orders")}</p>{!orderMonth && <p>{t("cd_book_to_start")}</p>}</div>
           ) : (
             <div className="cd-orders-list">
-              {(showAllOrders ? activeOrders : activeOrders.slice(0, PREVIEW_COUNT)).map((order) => {
+              {(showAllOrders ? displayedOrders : displayedOrders.slice(0, PREVIEW_COUNT)).map((order) => {
                 const status = STATUS_MAP[order.status] || STATUS_MAP.pending;
                 return (
                   <div className="cd-order-card" key={order.id}>
@@ -292,9 +299,9 @@ export default function ClientDashboard() {
                   </div>
                 );
               })}
-              {activeOrders.length > PREVIEW_COUNT && (
+              {displayedOrders.length > PREVIEW_COUNT && (
                 <button onClick={() => setShowAllOrders(v => !v)} className="cd-show-all-btn">
-                  {showAllOrders ? (isHe ? "הצג פחות" : "Show less") : (isHe ? `הצג הכל (${activeOrders.length})` : `Show all (${activeOrders.length})`)}
+                  {showAllOrders ? (isHe ? "הצג פחות" : "Show less") : (isHe ? `הצג הכל (${displayedOrders.length})` : `Show all (${displayedOrders.length})`)}
                 </button>
               )}
             </div>

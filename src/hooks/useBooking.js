@@ -120,12 +120,16 @@ export function useBooking({ t, lang, isHe, navigate }) {
         address: city,
         notes: desc || "",
       });
-      if (!r.ok) throw new Error("failed");
+      if (!r.ok) {
+        // השרת מחזיר JSON עם שדה error (למשל "לא ניתן לקבוע מועד שכבר עבר")
+        const data = await r.json().catch(() => ({}));
+        throw new Error(data.error || (isHe ? "יצירת ההזמנה נכשלה. נסו שוב." : "Failed to create booking. Please try again."));
+      }
       setModal(null);
       setOk(true);
       setTimeout(() => { setOk(false); navigate("/client/dashboard"); }, 2500);
     } catch (e) {
-      setBookErr(isHe ? "יצירת ההזמנה נכשלה. נסו שוב." : "Failed to create booking. Please try again.");
+      setBookErr(e.message || (isHe ? "יצירת ההזמנה נכשלה. נסו שוב." : "Failed to create booking. Please try again."));
     } finally {
       setBooking(false);
     }

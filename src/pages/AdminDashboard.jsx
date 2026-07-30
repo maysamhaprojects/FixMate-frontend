@@ -15,6 +15,7 @@
  *  GET  /api/admin/orders
  */
 
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { logout } from "../services/auth";
 import { getLang, getDir } from "../context/LanguageContext";
@@ -54,6 +55,15 @@ export default function AdminDashboard() {
     toast,
     approvePro, rejectPro, resolveComp, toggleUser, uploadAdminPhoto,
   } = useAdminData(L);
+
+  /* בורר חודש להזמנות: "" = כל החודשים */
+  const [orderMonth, setOrderMonth] = useState("");
+  const MON = isHe
+    ? ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const orderMonthOptions = [...new Set((orders || []).map((o) => (o.date || "").slice(0, 7)).filter(Boolean))].sort().reverse();
+  const orderMonthLabel = (k) => { const [y, m] = k.split("-"); return `${MON[parseInt(m, 10) - 1]} ${y}`; };
+  const shownOrders = orderMonth ? orders.filter((o) => (o.date || "").slice(0, 7) === orderMonth) : orders;
 
   /* nav */
   const NAV = [
@@ -459,14 +469,25 @@ export default function AdminDashboard() {
           <div className="admin-section">
             <SectionHeader
               title={L("All Orders", "כל ההזמנות")}
-              sub={L(`${orders.length} orders shown`, `${orders.length} הזמנות`)}
-              action={<BackBtn />}
+              sub={L(`${shownOrders.length} orders shown`, `${shownOrders.length} הזמנות`)}
+              action={
+                <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                  {orderMonthOptions.length > 0 && (
+                    <select value={orderMonth} onChange={(e) => setOrderMonth(e.target.value)}
+                      style={{ padding: "8px 12px", borderRadius: 10, border: "1.5px solid #E2E8F0", fontSize: 13, fontWeight: 600, color: "#334155", background: "#fff", cursor: "pointer", fontFamily: "inherit" }}>
+                      <option value="">{L("All months", "כל החודשים")}</option>
+                      {orderMonthOptions.map((k) => <option key={k} value={k}>{orderMonthLabel(k)}</option>)}
+                    </select>
+                  )}
+                  <BackBtn />
+                </div>
+              }
             />
             <div className="admin-table">
-              {orders.length === 0 && (
+              {shownOrders.length === 0 && (
                 <div className="admin-empty-row">{L("No orders yet", "אין הזמנות עדיין")}</div>
               )}
-              {orders.map((o, i, arr) => {
+              {shownOrders.map((o, i, arr) => {
                 const st = ORDER_STATUS[o.status] || ORDER_STATUS.pending;
                 return (
                   <div key={o.id} className={`trow admin-row admin-row--order ${i < arr.length - 1 ? "admin-row--sep" : ""}`}>

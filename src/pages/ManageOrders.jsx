@@ -20,6 +20,7 @@
  */
 
 import AppChrome from "../components/AppChrome";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getLang, getDir } from "../context/LanguageContext";
 import { useProOrders } from "../hooks/useProOrders";
@@ -38,6 +39,7 @@ export default function ManageOrders() {
   /* כל הלוגיקה מגיעה מ-hooks/useProOrders.js */
   const {
     mounted,
+    orders,
     filtered, count,
     activeFilter, setActiveFilter,
     search, setSearch,
@@ -46,6 +48,15 @@ export default function ManageOrders() {
     priceRange, priceError,
     doAction,
   } = useProOrders({ L });
+
+  /* בורר חודש: אם נבחר חודש — מסננים את ההזמנות לאותו חודש. */
+  const [orderMonth, setOrderMonth] = useState("");
+  const MON = isHe
+    ? ["ינואר", "פברואר", "מרץ", "אפריל", "מאי", "יוני", "יולי", "אוגוסט", "ספטמבר", "אוקטובר", "נובמבר", "דצמבר"]
+    : ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const monthOptions = [...new Set((orders || []).map((o) => (o.date || "").slice(0, 7)).filter(Boolean))].sort().reverse();
+  const monthLabel = (k) => { const [y, m] = k.split("-"); return `${MON[parseInt(m, 10) - 1]} ${y}`; };
+  const displayed = orderMonth ? filtered.filter((o) => (o.date || "").slice(0, 7) === orderMonth) : filtered;
 
   return (
     <div className="mo-page" dir={dir} style={{
@@ -63,7 +74,7 @@ export default function ManageOrders() {
         <div className="top-row">
           <div>
             <h1 className="mo-title">{isHe ? "ניהול הזמנות" : "Manage Orders"}</h1>
-            <p className="mo-subtitle">{filtered.length} {isHe ? "הזמנות" : "orders"}</p>
+            <p className="mo-subtitle">{displayed.length} {isHe ? "הזמנות" : "orders"}</p>
           </div>
           <div className="mo-search-wrap">
             <span className="mo-search-ico"><IconSearch /></span>
@@ -74,6 +85,13 @@ export default function ManageOrders() {
               placeholder={isHe ? "חיפוש..." : "Search..."}
             />
           </div>
+          {monthOptions.length > 0 && (
+            <select value={orderMonth} onChange={(e) => setOrderMonth(e.target.value)}
+              style={{ padding: "10px 14px", borderRadius: 12, border: "1.5px solid #E8ECF4", fontSize: 13.5, fontWeight: 600, color: "#334155", background: "#F9FAFB", cursor: "pointer", fontFamily: "inherit" }}>
+              <option value="">{isHe ? "כל החודשים" : "All months"}</option>
+              {monthOptions.map((k) => <option key={k} value={k}>{monthLabel(k)}</option>)}
+            </select>
+          )}
         </div>
 
         {/* ── פילטרים ── */}
@@ -102,7 +120,7 @@ export default function ManageOrders() {
         </div>
 
         {/* ── Grid כרטיסים ── */}
-        {filtered.length === 0 ? (
+        {displayed.length === 0 ? (
           <div className="mo-empty">
             <div className="mo-empty-emoji">📭</div>
             <p className="mo-empty-title">{isHe ? "אין הזמנות" : "No orders found"}</p>
@@ -110,7 +128,7 @@ export default function ManageOrders() {
           </div>
         ) : (
           <div className="cards-grid">
-            {filtered.map((order, idx) => {
+            {displayed.map((order, idx) => {
               const st      = STATUS_STYLE[order.status];
               const actions = getActions(order.status);
               return (

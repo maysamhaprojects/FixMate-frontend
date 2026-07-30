@@ -12,7 +12,7 @@ import { getNotifications } from "../services/client";
 import { getMyBookings, updateBooking, cancelBooking } from "../services/booking";
 import { getRatedBookings } from "../services/rating";
 import { createComplaint, getMyComplaints } from "../services/complaint";
-import { CANCEL_FEE, GRACE_MINUTES } from "../data/clientConstants";
+import { CANCEL_FEE } from "../data/clientConstants";
 import { apiFetch } from "../services/api";
 
 /* שמות ימי השבוע (בסדר שבועי) — לסיכום שעות העבודה של בעל המקצוע */
@@ -281,18 +281,17 @@ export function useClientData({ t, lang, isHe }) {
       .finally(() => setCompSaving(false));
   };
 
-  /* ── ביטול הזמנה ומדיניות הקנס ── */
-  const getHoursUntilOrder = (order) => {
-    const d = new Date(`${order.date} ${order.time}`);
-    return Math.max(0, Math.round((d - new Date()) / 36e5));
+  /* ── ביטול הזמנה ומדיניות הקנס ──
+     חלון ביטול חינם: 48 שעות מרגע ביצוע ההזמנה. אחרי 48 שעות מההזמנה — קנס. */
+  const CANCEL_FREE_HOURS = 48;
+  const hoursSinceBooking = (order) => {
+    if (!order.createdAt) return 0;
+    return (Date.now() - new Date(order.createdAt).getTime()) / 36e5;
   };
-  const isWithin48Hours = (order) => getHoursUntilOrder(order) < 48;
-  const isGracePeriod = (order) => {
-    if (!order.createdAt) return false;
-    return (Date.now() - new Date(order.createdAt).getTime()) < GRACE_MINUTES * 60 * 1000;
-  };
-  // קנס נגבה רק אם הפגישה בתוך 48 שעות וגם עברה תקופת החסד מההזמנה
-  const chargesFee = (order) => isWithin48Hours(order) && !isGracePeriod(order);
+  // כמה שעות נותרו לביטול חינם (מעוגל)
+  const freeHoursLeft = (order) => Math.max(0, Math.round(CANCEL_FREE_HOURS - hoursSinceBooking(order)));
+  // קנס נגבה רק אם עברו 48 שעות ומעלה מרגע ההזמנה
+  const chargesFee = (order) => order.createdAt ? hoursSinceBooking(order) >= CANCEL_FREE_HOURS : false;
 
   const confirmCancel = () => {
     const order = cancelConfirm;
@@ -350,7 +349,7 @@ export function useClientData({ t, lang, isHe }) {
 
     /* ביטול */
     cancelConfirm, setCancelConfirm, cancelReason, setCancelReason,
-    confirmCancel, chargesFee, getHoursUntilOrder, CANCEL_FEE,
+    confirmCancel, chargesFee, freeHoursLeft, CANCEL_FEE,
 
     /* תלונה */
     showComplaint, setShowComplaint, openComplaint, submitComplaint, compSaving,

@@ -67,7 +67,7 @@ export default function ClientDashboard() {
     editAddr, setEditAddr, editDesc, setEditDesc,
     trackOrder, setTrackOrder, getProgressSteps,
     cancelConfirm, setCancelConfirm, cancelReason, setCancelReason,
-    confirmCancel, chargesFee, CANCEL_FEE,
+    confirmCancel, chargesFee, getHoursUntilOrder, CANCEL_FEE,
     showComplaint, setShowComplaint, openComplaint, submitComplaint, compSaving,
     compSubject, setCompSubject, compDesc, setCompDesc, compOrderId, setCompOrderId,
     toast,
@@ -343,6 +343,7 @@ export default function ClientDashboard() {
 
       <CancelOrderModal order={cancelConfirm} onClose={() => setCancelConfirm(null)}
         reason={cancelReason} setReason={setCancelReason} chargesFee={chargesFee}
+        hoursUntil={getHoursUntilOrder}
         fee={CANCEL_FEE} onConfirm={confirmCancel} t={t} dir={dir} lang={lang} isHe={isHe} />
 
       <ComplaintModal open={showComplaint} onClose={() => setShowComplaint(false)}

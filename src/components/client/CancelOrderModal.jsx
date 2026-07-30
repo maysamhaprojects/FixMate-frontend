@@ -1,6 +1,7 @@
 /* FixMate — מודל ביטול הזמנה (לקוח) */
-export default function CancelOrderModal({ order, onClose, reason, setReason, chargesFee, fee, onConfirm, t, dir, lang, isHe }) {
+export default function CancelOrderModal({ order, onClose, reason, setReason, chargesFee, hoursUntil, fee, onConfirm, t, dir, lang, isHe }) {
   if (!order) return null;
+  const hrs = hoursUntil ? hoursUntil(order) : null;   // שעות עד הפגישה
   return (
     <div className="cd-modal-overlay" onClick={onClose}>
       <div className="cd-modal cd-modal--small" onClick={(e) => e.stopPropagation()} style={{ direction: dir }}>
@@ -13,12 +14,30 @@ export default function CancelOrderModal({ order, onClose, reason, setReason, ch
           {chargesFee(order) ? (
             <div className="cd-cancel-fee-box cd-cancel-fee-box--paid">
               <div className="cd-cancel-fee-icon">💰</div>
-              <div><p className="cd-cancel-fee-title">{t("cd_cancel_fee_title")} ₪{fee}</p><p className="cd-cancel-fee-desc">{t("cd_cancel_fee_desc")}</p></div>
+              <div>
+                <p className="cd-cancel-fee-title">{t("cd_cancel_fee_title")} ₪{fee}</p>
+                <p className="cd-cancel-fee-desc">
+                  {hrs != null
+                    ? (isHe
+                        ? `הפגישה בעוד כ-${hrs} שעות — פחות מ-48 שעות, ולכן ייגבו דמי ביטול.`
+                        : `The appointment is in ~${hrs} hours — less than 48, so a cancellation fee applies.`)
+                    : t("cd_cancel_fee_desc")}
+                </p>
+              </div>
             </div>
           ) : (
             <div className="cd-cancel-fee-box cd-cancel-fee-box--free">
               <div className="cd-cancel-fee-icon">✓</div>
-              <div><p className="cd-cancel-fee-title">{t("cd_free_cancel_title")}</p><p className="cd-cancel-fee-desc">{t("cd_free_cancel_desc")}</p></div>
+              <div>
+                <p className="cd-cancel-fee-title">{t("cd_free_cancel_title")}</p>
+                <p className="cd-cancel-fee-desc">
+                  {hrs != null && hrs >= 48
+                    ? (isHe
+                        ? `הפגישה בעוד יותר מ-48 שעות — הביטול חינם, ללא דמי ביטול. 🎉`
+                        : `More than 48 hours before the appointment — cancellation is free. 🎉`)
+                    : t("cd_free_cancel_desc")}
+                </p>
+              </div>
             </div>
           )}
 

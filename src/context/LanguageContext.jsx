@@ -276,7 +276,16 @@ export function LanguageProvider({ children }) {
   const [lang, setLang] = useState(function() {
     try { return localStorage.getItem("fixmate_lang") || "en"; } catch(e) { return "en"; }
   });
-  var toggleLang = function() { setLang(function(prev) { var next = prev === "en" ? "he" : "en"; try { localStorage.setItem("fixmate_lang", next); } catch(e) {} return next; }); };
+  /* מחליף שפה ומרענן את הדף. הרענון מבטיח שכל הרכיבים — כולל אלה
+     שקוראים את השפה עם getLang()/getDir() ישירות מ-localStorage
+     (למשל AppChrome ו-MindMap) — ייטענו מחדש בשפה ובכיוון הנכונים.
+     בלי הרענון הם "נתקעים" בשפה הישנה (הנאבבar לא מתהפך, ותוכן
+     כמו "תקלות נפוצות" נשאר באנגלית). */
+  var toggleLang = function() {
+    var next = lang === "en" ? "he" : "en";
+    try { localStorage.setItem("fixmate_lang", next); } catch(e) {}
+    window.location.reload();
+  };
   var dir = lang === "he" ? "rtl" : "ltr";
   var translate = function(key) { return (T[key] && T[key][lang]) || (T[key] && T[key].en) || key; };
 

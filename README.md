@@ -7,10 +7,24 @@ The project is split into two repositories:
 - **Frontend (web app):** https://github.com/maysamhaprojects/FixMate-frontend
 - **Backend (server):** https://github.com/maysamhaprojects/FixMate-backend
 
+## Live Demo
+
+FixMate is deployed and running live on the cloud (AWS EC2, with Docker and HTTPS):
+
+**https://fixmate.duckdns.org**
+
+You can use the live site directly — no installation needed. To try the administrator area, sign in with `admin@fixmate.com` / `Admin@123`, or register your own client or professional account through the site.
+
 ## Documentation
 
-- [HOW-TO-RUN.md](HOW-TO-RUN.md) — how to install and run the full project.
-- [USER-GUIDE.md](USER-GUIDE.md) — what the application does, feature by feature.
+This project comes with two main guide files:
+
+- **[HOW-TO-RUN.md](HOW-TO-RUN.md)** — how to use the live site, or install and run the full project locally.
+- **[USER-GUIDE.md](USER-GUIDE.md)** — what the application does, feature by feature, from the user's point of view.
+
+Additional reference:
+
+- [DOCKER.md](DOCKER.md) — running the whole stack (database, server, web app) with Docker in one command.
 
 ---
 
@@ -80,6 +94,14 @@ The application is fully bilingual (English and Hebrew, including right-to-left 
 - OpenAI API for the AI assistant.
 - Gmail SMTP for email notifications.
 - Maven (via the included wrapper) for the backend build.
+
+### Deployment (Cloud)
+- Docker and Docker Compose — the whole stack (database, server, web app) runs in containers.
+- AWS EC2 — the cloud server that hosts the live site.
+- Caddy — reverse proxy providing automatic HTTPS (SSL certificate) and a single entry point.
+- DuckDNS — free domain name (`fixmate.duckdns.org`).
+- AWS CloudWatch — collects the server logs in the cloud.
+- GitHub Actions — automatic deployment (CI/CD): pushing to `main` in either repository redeploys the live site automatically.
 
 ---
 
@@ -189,4 +211,4 @@ All protected endpoints require a JWT token in the `Authorization` header.
 
 ## Project Status
 
-Functional graduation project (2026). Core flows for clients, professionals, and administrators are implemented and connected end to end.
+Functional graduation project (2026). Core flows for clients, professionals, and administrators are implemented and connected end to end. The application is deployed and running live on the cloud at **https://fixmate.duckdns.org**, with automatic deployment on every update.

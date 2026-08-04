@@ -2,7 +2,7 @@
 
 This document describes everything a user can do in the FixMate web application, from the first screen to logging out. It is written from the user's point of view (the experience), not the technical implementation.
 
-For installation and setup instructions, see [HOW-TO-RUN.md](HOW-TO-RUN.md).
+The application is live on the cloud at **https://fixmate.duckdns.org** — you can follow along on the real site. For installation and setup instructions, see [HOW-TO-RUN.md](HOW-TO-RUN.md).
 
 FixMate is a platform that connects clients with verified home-service professionals (electrical, plumbing, air conditioning, carpentry, painting, and more). The application has three types of users: Client, Professional, and Administrator.
 

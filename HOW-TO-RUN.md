@@ -1,6 +1,17 @@
 # FixMate — Setup and Run Guide
 
-This guide explains how to run the complete FixMate project on a new machine, from cloning the source code to logging in. It is written to be followed step by step.
+There are two ways to use FixMate:
+
+- **Option A — Use the live site (no installation).** FixMate is already deployed on the cloud at **https://fixmate.duckdns.org**. Just open it in a browser and sign in. This is the fastest way to try the application.
+- **Option B — Run it locally.** Follow the step-by-step guide below to run the full project on your own machine. (You can also run everything in Docker with one command — see [DOCKER.md](DOCKER.md).)
+
+To sign in on the live site, use the administrator account (`admin@fixmate.com` / `Admin@123`), or register your own client or professional account. What each role can do is described in [USER-GUIDE.md](USER-GUIDE.md).
+
+---
+
+## Running locally
+
+The rest of this guide explains how to run the complete FixMate project on a new machine, from cloning the source code to logging in. It is written to be followed step by step.
 
 FixMate has two parts that run at the same time:
 

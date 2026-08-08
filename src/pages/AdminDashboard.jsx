@@ -65,6 +65,16 @@ export default function AdminDashboard() {
   const orderMonthLabel = (k) => { const [y, m] = k.split("-"); return `${MON[parseInt(m, 10) - 1]} ${y}`; };
   const shownOrders = orderMonth ? orders.filter((o) => (o.date || "").slice(0, 7) === orderMonth) : orders;
 
+  /* תוויות סטטוס דו-לשוניות — כך הסטטוס מופיע בעברית כשהאתר בעברית (במקום "pending") */
+  const STATUS_LABEL = {
+    pending:     L("Pending", "ממתין"),
+    confirmed:   L("Confirmed", "מאושר"),
+    in_progress: L("In progress", "בביצוע"),
+    done:        L("Done", "הושלם"),
+    cancelled:   L("Cancelled", "בוטל"),
+  };
+  const statusLabel = (s) => STATUS_LABEL[s] || s;
+
   /* nav */
   const NAV = [
     { id: "overview",   label: L("Overview",   "סקירה"),       Icon: IcoGrid,  badge: null },
@@ -213,7 +223,7 @@ export default function AdminDashboard() {
                         <p className="admin-mini-sub">{isHe ? o.serviceHe : o.service} · {o.id}</p>
                       </div>
                       <div style={{ textAlign: "end" }}>
-                        <span className="admin-pill" style={{ background: st.bg, color: st.color }}>{L(o.status.replace("_", " "), o.status)}</span>
+                        <span className="admin-pill" style={{ background: st.bg, color: st.color }}>{statusLabel(o.status)}</span>
                         {o.status === "done" && o.price != null && o.price > 0
                           ? <p className="admin-mini-price">₪{o.price}</p>
                           : <p className="admin-mini-price admin-mini-price--pending">{L("—", "—")}</p>}
@@ -503,7 +513,7 @@ export default function AdminDashboard() {
                       ? <span className="admin-order-price">₪{o.price}</span>
                       : <span className="admin-order-price admin-order-price--pending">—</span>}
                     <span className="admin-status-pill" style={{ background: st.bg, color: st.color }}>
-                      {L(o.status.replace("_", " "), o.status)}
+                      {statusLabel(o.status)}
                     </span>
                   </div>
                 );

@@ -61,7 +61,9 @@ export function useBooking({ t, lang, isHe, navigate }) {
   useEffect(() => {
     if (!results) return;
     setProsLoading(true);
-    getPros()
+    // מעבירים את המועד שנבחר כדי שהשרת יסנן למקצוענים שפנויים אז בלבד
+    const scheduledAt = date && time ? date + "T" + time + ":00" : null;
+    getPros(scheduledAt)
       .then((r) => (r.ok ? r.json() : []))
       .then((list) => {
         const arr = Array.isArray(list) ? list : [];
